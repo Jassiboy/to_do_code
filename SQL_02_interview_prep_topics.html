@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL + PySpark Interview Console — Topic-wise Problem Bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10141B;
+    --bg-panel: #171D26;
+    --bg-panel-raised: #1D2530;
+    --line: #2A3341;
+    --line-soft: #212933;
+    --text: #E8ECF1;
+    --text-muted: #8B96A5;
+    --text-dim: #5C6675;
+    --amber: #F2B84B;
+    --amber-dim: #7A6534;
+    --teal: #5FD4C7;
+    --teal-dim: #2B5A54;
+    --rose: #E8836F;
+    --violet: #B79CF2;
+    --violet-dim: #4A3E6B;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --display: 'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -5%, rgba(95,212,199,0.07), transparent),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(242,184,75,0.06), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+    border-bottom:1px solid var(--line);
+    padding:14px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    background:rgba(16,20,27,0.9);
+    backdrop-filter:blur(10px);
+    z-index:50;
+  }
+  .topbar-left{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--text-dim);}
+  .dot-row{display:flex;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;}
+  .dot.r{background:#E8836F;} .dot.y{background:#F2B84B;} .dot.g{background:#5FD4C7;}
+  .topbar-right{font-family:var(--mono);font-size:12px;color:var(--text-dim);}
+  .topbar-right span{color:var(--teal);}
+  .hero{max-width:960px;margin:0 auto;padding:64px 28px 40px;}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:0.12em;color:var(--teal);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .eyebrow::before{content:'❯';color:var(--amber);font-weight:700;}
+  h1{font-family:var(--display);font-size:42px;line-height:1.12;margin:0 0 16px;font-weight:700;letter-spacing:-0.01em;}
+  h1 .hl{color:var(--amber);} h1 .hl2{color:var(--violet);}
+  .lede{color:var(--text-muted);font-size:16.5px;max-width:680px;margin:0 0 30px;}
+  .lede b{color:var(--text);font-weight:600;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:12px;}
+  .chip{border:1px solid var(--line);background:var(--bg-panel);color:var(--text-muted);padding:6px 12px;border-radius:20px;}
+  .chip b{color:var(--text);}
+  .index-wrap{max-width:960px;margin:0 auto;padding:0 28px 50px;}
+  .index-title{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;}
+  .index-topic{margin-bottom:22px;}
+  .index-topic-name{font-family:var(--display);font-size:15px;font-weight:600;color:var(--teal);margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+  .index-topic-name .tnum{font-family:var(--mono);font-size:11px;color:var(--bg);background:var(--teal);padding:1px 7px;border-radius:4px;}
+  .index-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:8px;}
+  .index-item{border:1px solid var(--line-soft);border-radius:8px;padding:10px 14px;text-decoration:none;color:var(--text-muted);font-size:13.5px;display:flex;gap:10px;align-items:baseline;transition:border-color .15s, color .15s, background .15s;}
+  .index-item:hover{border-color:var(--teal-dim);color:var(--text);background:var(--bg-panel);}
+  .index-item .n{font-family:var(--mono);color:var(--amber);font-size:12px;}
+  .stack{max-width:960px;margin:0 auto;padding:0 28px 100px;display:flex;flex-direction:column;gap:22px;}
+  .topic-divider{display:flex;align-items:center;gap:14px;margin:18px 0 -2px;scroll-margin-top:80px;}
+  .topic-divider .line{flex:1;height:1px;background:var(--line);}
+  .topic-divider h2{font-family:var(--display);font-size:19px;font-weight:600;color:var(--text);margin:0;white-space:nowrap;display:flex;align-items:center;gap:10px;}
+  .topic-divider .tag{font-family:var(--mono);font-size:11px;color:var(--bg);background:var(--teal);padding:2px 9px;border-radius:20px;}
+  .topic-blurb{color:var(--text-dim);font-size:13px;margin:-14px 0 0;max-width:700px;}
+  .card{border:1px solid var(--line);border-radius:10px;background:var(--bg-panel);overflow:hidden;scroll-margin-top:80px;}
+  .card-head{padding:20px 24px 16px;border-bottom:1px solid var(--line-soft);}
+  .card-head-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+  .qnum{font-family:var(--mono);font-size:12px;color:var(--bg);background:var(--amber);padding:2px 8px;border-radius:4px;font-weight:700;}
+  .difficulty{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;padding:2px 9px;border-radius:20px;border:1px solid;text-transform:uppercase;}
+  .difficulty.med{color:var(--amber);border-color:var(--amber-dim);}
+  .difficulty.hard{color:var(--rose);border-color:#5E3A32;}
+  .tables-used{margin-left:auto;display:flex;gap:6px;font-family:var(--mono);font-size:11px;}
+  .table-tag{background:var(--bg-panel-raised);border:1px solid var(--line-soft);color:var(--teal);padding:2px 8px;border-radius:4px;}
+  .card-title{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 8px;}
+  .card-prompt{color:var(--text-muted);font-size:14.5px;margin:0;}
+  .card-prompt code{font-family:var(--mono);background:var(--bg-panel-raised);padding:1px 6px;border-radius:4px;font-size:13px;color:var(--teal);}
+  .card-body{padding:20px 24px 24px;}
+  .section-label{font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+  .section-label:first-child{margin-top:0;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--line-soft);}
+  pre{margin:0;background:#0C0F14;border:1px solid var(--line-soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.6px;line-height:1.55;}
+  code{font-family:var(--mono);}
+  .kw{color:#C58AF2;} .str{color:#A8D97A;} .com{color:var(--text-dim);font-style:italic;} .fn{color:var(--teal);}
+  .py-kw{color:#F2B84B;} .py-fn{color:#5FD4C7;} .py-str{color:#A8D97A;} .py-com{color:var(--text-dim);font-style:italic;} .py-cls{color:#E8836F;}
+  table.data{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px;}
+  table.data th{text-align:left;background:var(--bg-panel-raised);color:var(--amber);padding:7px 12px;border:1px solid var(--line-soft);font-weight:600;}
+  table.data td{padding:6px 12px;border:1px solid var(--line-soft);color:var(--text-muted);}
+  .table-scroll{overflow-x:auto;border-radius:8px;}
+  .io-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:720px){.io-pair{grid-template-columns:1fr;}}
+  .io-block h4{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em;}
+  .lang-tabs{display:flex;gap:4px;background:var(--bg-panel-raised);border:1px solid var(--line-soft);border-radius:8px;padding:3px;width:max-content;margin-bottom:14px;}
+  .lang-tab{font-family:var(--mono);font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;color:var(--text-dim);user-select:none;transition:background .15s, color .15s;display:flex;align-items:center;gap:6px;}
+  .lang-tab .sw{width:7px;height:7px;border-radius:50%;background:var(--text-dim);}
+  .lang-tab.active{color:var(--bg);background:var(--amber);}
+  .lang-tab.active .sw{background:var(--bg);}
+  .lang-tab[data-lang="pyspark"].active{background:var(--violet);}
+  .lang-pane{display:none;}
+  .lang-pane.active{display:block;}
+  details.solution{margin-top:20px;border:1px dashed var(--line);border-radius:8px;background:linear-gradient(180deg, rgba(95,212,199,0.03), transparent);}
+  details.solution summary{list-style:none;cursor:pointer;padding:13px 18px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--teal);user-select:none;}
+  details.solution summary::-webkit-details-marker{display:none;}
+  details.solution summary::before{content:'▶';font-size:10px;color:var(--text-dim);transition:transform .18s ease;}
+  details.solution[open] summary::before{transform:rotate(90deg);}
+  details.solution summary .prompt-txt{color:var(--text-dim);}
+  details.solution summary .exec{color:var(--amber);}
+  details.solution[open] summary{border-bottom:1px solid var(--line-soft);}
+  .solution-inner{padding:16px 18px 20px;}
+  .approach{color:var(--text-muted);font-size:13.5px;margin:0 0 14px;padding:10px 14px;background:var(--bg-panel-raised);border-left:2px solid var(--teal);border-radius:0 6px 6px 0;}
+  .approach.py{border-left-color:var(--violet);}
+  footer{max-width:960px;margin:0 auto;padding:0 28px 60px;font-family:var(--mono);font-size:12px;color:var(--text-dim);border-top:1px solid var(--line-soft);padding-top:24px;}
+  footer .blink{color:var(--teal);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="dot-row"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+    topic_bank.sql / topic_bank.py
+  </div>
+  <div class="topbar-right">dialects: <span>ANSI SQL</span> · <span>PySpark 3.x DataFrame API</span></div>
+</div>
+
+<div class="hero">
+  <div class="eyebrow">practice set · organized by pattern</div>
+  <h1>SQL problem patterns, <span class="hl">topic by topic</span> — from <span class="hl2">concept</span> to complex</h1>
+  <p class="lede">
+    Every SQL interview question is really a variation on a handful of underlying patterns.
+    This bank groups <b>8 core patterns</b> — the ones beyond plain GROUP BY and islands-and-gaps you
+    already know — into <b>one concept-level warm-up and one deliberately harder, multi-twist version</b>
+    per topic. Each card ships SQL + PySpark, sample data, and a hidden solution.
+  </p>
+  <div class="meta-row">
+    <div class="chip"><b>8</b> topics</div>
+    <div class="chip"><b>16</b> questions</div>
+    <div class="chip"><b>2</b> languages per question</div>
+    <div class="chip"><b>Concept + Complex</b> per topic</div>
+  </div>
+</div>
+
+<div class="index-wrap">
+  <div class="index-title">Jump to a topic / question</div>
+  <div id="indexTopics"></div>
+</div>
+
+<div class="stack" id="stack"></div>
+
+<footer>
+  <span class="blink">$</span> tip — in a live round, say the pattern name out loud first ("this is gaps-and-islands with a session-timeout twist") before you write a line of SQL. It signals you recognize the shape, not just the syntax.
+</footer>
+
+<script>
+const topics = [
+
+{
+  name: "Ranking & Top-N Per Group",
+  blurb: "RANK vs DENSE_RANK vs ROW_NUMBER — and what happens to your 'top N' when values tie.",
+  questions: [
+    {
+      id: "nth-highest-salary",
+      difficulty: "med",
+      tables: ["employees"],
+      title: "2nd Highest Salary per Department",
+      prompt: "Find the <b>2nd highest distinct salary</b> in each department. Departments with fewer than 2 distinct salaries should still appear, with <code>NULL</code>.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> employees (
+    employee_id   <span class="fn">INT</span>,
+    name          <span class="fn">VARCHAR</span>(50),
+    department_id <span class="fn">INT</span>,
+    salary        <span class="fn">DECIMAL</span>(10,2)
+);
+
+<span class="kw">INSERT INTO</span> employees <span class="kw">VALUES</span>
+(1, <span class="str">'Amit'</span>,  10, 95000),
+(2, <span class="str">'Sara'</span>,  10, 88000),
+(3, <span class="str">'Wei'</span>,   10, 88000),
+(4, <span class="str">'Diego'</span>,10, 76000),
+(5, <span class="str">'Nina'</span>, 20, 120000),
+(6, <span class="str">'Owen'</span>, 20, 110000),
+(7, <span class="str">'Priya'</span>,30, 60000);`,
+      pysparkBoilerplate:
+`employees = spark.createDataFrame([
+    (1, <span class="py-str">"Amit"</span>,  10, 95000), (2, <span class="py-str">"Sara"</span>, 10, 88000),
+    (3, <span class="py-str">"Wei"</span>,   10, 88000), (4, <span class="py-str">"Diego"</span>,10, 76000),
+    (5, <span class="py-str">"Nina"</span>,  20, 120000),(6, <span class="py-str">"Owen"</span>, 20, 110000),
+    (7, <span class="py-str">"Priya"</span>, 30, 60000),
+], [<span class="py-str">"employee_id"</span>, <span class="py-str">"name"</span>, <span class="py-str">"department_id"</span>, <span class="py-str">"salary"</span>])`,
+      inputTable: {cols:["employee_id","name","department_id","salary"], rows:[
+        [1,"Amit",10,"95000"],[2,"Sara",10,"88000"],[3,"Wei",10,"88000"],[4,"Diego",10,"76000"],
+        [5,"Nina",20,"120000"],[6,"Owen",20,"110000"],[7,"Priya",30,"60000"]
+      ]},
+      outputTable: {cols:["department_id","second_highest_salary"], rows:[
+        [10,"88000"],[20,"110000"],[30,"NULL"]
+      ]},
+      approach: "DENSE_RANK() (not RANK) so a tie at the top doesn't skip a rank — the 2nd *distinct* value is what's wanted. LEFT JOIN the rank-2 rows back onto a distinct-department spine so departments without a 2nd salary still surface with NULL instead of disappearing.",
+      pyApproach: "Same DENSE_RANK logic with a Window. Build the 'all departments' spine with select().distinct(), then left-join the rank==2 rows onto it.",
+      solution:
+`<span class="kw">WITH</span> ranked <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> department_id, salary,
+           DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) <span class="kw">AS</span> rnk
+    <span class="kw">FROM</span> employees
+)
+<span class="kw">SELECT</span> d.department_id,
+       MAX(<span class="kw">CASE WHEN</span> r.rnk = 2 <span class="kw">THEN</span> r.salary <span class="kw">END</span>) <span class="kw">AS</span> second_highest_salary
+<span class="kw">FROM</span> (<span class="kw">SELECT DISTINCT</span> department_id <span class="kw">FROM</span> employees) d
+<span class="kw">LEFT JOIN</span> ranked r <span class="kw">ON</span> d.department_id = r.department_id
+<span class="kw">GROUP BY</span> d.department_id
+<span class="kw">ORDER BY</span> d.department_id;`,
+      pysparkSolution:
+`w = Window.partitionBy(<span class="py-str">"department_id"</span>).orderBy(F.desc(<span class="py-str">"salary"</span>))
+ranked = employees.withColumn(<span class="py-str">"rnk"</span>, F.dense_rank().over(w))
+all_depts = employees.select(<span class="py-str">"department_id"</span>).distinct()
+second = ranked.filter(F.col(<span class="py-str">"rnk"</span>) == 2) \\
+                .select(<span class="py-str">"department_id"</span>, F.col(<span class="py-str">"salary"</span>).alias(<span class="py-str">"second_highest_salary"</span>))
+result = all_depts.join(second, <span class="py-str">"department_id"</span>, <span class="py-str">"left"</span>).orderBy(<span class="py-str">"department_id"</span>)
+result.show()`
+    },
+    {
+      id: "top3-ties",
+      difficulty: "hard",
+      tables: ["product_sales"],
+      title: "Top 3 Products by Revenue — Ties Included",
+      prompt: "Return the top 3 products by revenue in each category. If there's a tie for a position, <b>include every tied row</b> — the output can legitimately have more than 3 rows for a category.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> product_sales (
+    category     <span class="fn">VARCHAR</span>(30),
+    product_name <span class="fn">VARCHAR</span>(30),
+    revenue      <span class="fn">DECIMAL</span>(10,2)
+);
+
+<span class="kw">INSERT INTO</span> product_sales <span class="kw">VALUES</span>
+(<span class="str">'Electronics'</span>,<span class="str">'Phone'</span>,   5000),
+(<span class="str">'Electronics'</span>,<span class="str">'Laptop'</span>,  4800),
+(<span class="str">'Electronics'</span>,<span class="str">'Tablet'</span>,  4800),
+(<span class="str">'Electronics'</span>,<span class="str">'Speaker'</span>, 3000),
+(<span class="str">'Home'</span>,<span class="str">'Sofa'</span>,  7000),
+(<span class="str">'Home'</span>,<span class="str">'Table'</span>, 6000),
+(<span class="str">'Home'</span>,<span class="str">'Lamp'</span>,  4000),
+(<span class="str">'Home'</span>,<span class="str">'Chair'</span>, 4000);`,
+      pysparkBoilerplate:
+`product_sales = spark.createDataFrame([
+    (<span class="py-str">"Electronics"</span>,<span class="py-str">"Phone"</span>,5000), (<span class="py-str">"Electronics"</span>,<span class="py-str">"Laptop"</span>,4800),
+    (<span class="py-str">"Electronics"</span>,<span class="py-str">"Tablet"</span>,4800), (<span class="py-str">"Electronics"</span>,<span class="py-str">"Speaker"</span>,3000),
+    (<span class="py-str">"Home"</span>,<span class="py-str">"Sofa"</span>,7000), (<span class="py-str">"Home"</span>,<span class="py-str">"Table"</span>,6000),
+    (<span class="py-str">"Home"</span>,<span class="py-str">"Lamp"</span>,4000), (<span class="py-str">"Home"</span>,<span class="py-str">"Chair"</span>,4000),
+], [<span class="py-str">"category"</span>, <span class="py-str">"product_name"</span>, <span class="py-str">"revenue"</span>])`,
+      inputTable: {cols:["category","product_name","revenue"], rows:[
+        ["Electronics","Phone","5000"],["Electronics","Laptop","4800"],["Electronics","Tablet","4800"],["Electronics","Speaker","3000"],
+        ["Home","Sofa","7000"],["Home","Table","6000"],["Home","Lamp","4000"],["Home","Chair","4000"]
+      ]},
+      outputTable: {cols:["category","product_name","revenue","rnk"], rows:[
+        ["Electronics","Phone","5000","1"],["Electronics","Laptop","4800","2"],["Electronics","Tablet","4800","2"],
+        ["Home","Sofa","7000","1"],["Home","Table","6000","2"],["Home","Lamp","4000","3"],["Home","Chair","4000","3"]
+      ]},
+      approach: "This is the classic RANK() vs DENSE_RANK() vs ROW_NUMBER() gotcha. ROW_NUMBER() would arbitrarily pick one of the tied rows and give exactly 3 rows per category — wrong here, since it silently drops a legitimate result. RANK() gives tied rows the same rank and then *skips* the next rank (Electronics has no rank-3 row because two products tied at rank 2), which is exactly the semantics the prompt wants: filter WHERE rnk <= 3 and let ties naturally produce more than 3 rows for Home.",
+      pyApproach: "F.rank() over a Window, not F.row_number() or F.dense_rank() — rank() is the one that both keeps ties together and skips the following rank, matching the SQL RANK() behavior.",
+      solution:
+`<span class="kw">WITH</span> ranked <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> category, product_name, revenue,
+           RANK() OVER (PARTITION BY category ORDER BY revenue DESC) <span class="kw">AS</span> rnk
+    <span class="kw">FROM</span> product_sales
+)
+<span class="kw">SELECT</span> category, product_name, revenue, rnk
+<span class="kw">FROM</span> ranked
+<span class="kw">WHERE</span> rnk <= 3
+<span class="kw">ORDER BY</span> category, rnk, product_name;`,
+      pysparkSolution:
+`w = Window.partitionBy(<span class="py-str">"category"</span>).orderBy(F.desc(<span class="py-str">"revenue"</span>))
+result = (
+    product_sales.withColumn(<span class="py-str">"rnk"</span>, F.rank().over(w))
+    .filter(F.col(<span class="py-str">"rnk"</span>) <= 3)
+    .orderBy(<span class="py-str">"category"</span>, <span class="py-str">"rnk"</span>, <span class="py-str">"product_name"</span>)
+)
+result.show()`
+    }
+  ]
+},
+
+{
+  name: "Running Totals & Rolling Aggregates",
+  blurb: "Frame clauses: unbounded-preceding cumulative sums, and bounded trailing windows for anomaly detection.",
+  questions: [
+    {
+      id: "running-total-basic",
+      difficulty: "med",
+      tables: ["daily_sales"],
+      title: "Cumulative Running Total of Revenue",
+      prompt: "For each store, compute a running cumulative total of <code>revenue</code> ordered by <code>sale_date</code>.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> daily_sales (
+    store_id  <span class="fn">INT</span>,
+    sale_date <span class="fn">DATE</span>,
+    revenue   <span class="fn">DECIMAL</span>(10,2)
+);
+
+<span class="kw">INSERT INTO</span> daily_sales <span class="kw">VALUES</span>
+(1, <span class="str">'2026-08-01'</span>, 1000),
+(1, <span class="str">'2026-08-02'</span>, 1200),
+(1, <span class="str">'2026-08-03'</span>,  900),
+(1, <span class="str">'2026-08-04'</span>, 1500);`,
+      pysparkBoilerplate:
+`daily_sales = spark.createDataFrame([
+    (1, <span class="py-str">"2026-08-01"</span>, 1000), (1, <span class="py-str">"2026-08-02"</span>, 1200),
+    (1, <span class="py-str">"2026-08-03"</span>,  900), (1, <span class="py-str">"2026-08-04"</span>, 1500),
+], [<span class="py-str">"store_id"</span>, <span class="py-str">"sale_date"</span>, <span class="py-str">"revenue"</span>])`,
+      inputTable: {cols:["store_id","sale_date","revenue"], rows:[
+        [1,"2026-08-01","1000"],[1,"2026-08-02","1200"],[1,"2026-08-03","900"],[1,"2026-08-04","1500"]
+      ]},
+      outputTable: {cols:["store_id","sale_date","revenue","running_total"], rows:[
+        [1,"2026-08-01","1000","1000"],[1,"2026-08-02","1200","2200"],[1,"2026-08-03","900","3100"],[1,"2026-08-04","1500","4600"]
+      ]},
+      approach: "SUM(revenue) OVER (PARTITION BY store_id ORDER BY sale_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW). Note ORDER BY inside a window without an explicit frame defaults to this exact frame on most engines — but write it explicitly in an interview so you're not relying on a default the interviewer may not know either.",
+      pyApproach: "Window.partitionBy(...).orderBy(...).rowsBetween(Window.unboundedPreceding, Window.currentRow), then F.sum(...).over(w).",
+      solution:
+`<span class="kw">SELECT</span> store_id, sale_date, revenue,
+       <span class="fn">SUM</span>(revenue) OVER (
+           PARTITION BY store_id
+           ORDER BY sale_date
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+       ) <span class="kw">AS</span> running_total
+<span class="kw">FROM</span> daily_sales
+<span class="kw">ORDER BY</span> store_id, sale_date;`,
+      pysparkSolution:
+`w = (
+    Window.partitionBy(<span class="py-str">"store_id"</span>)
+    .orderBy(<span class="py-str">"sale_date"</span>)
+    .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+)
+result = daily_sales.withColumn(<span class="py-str">"running_total"</span>, F.sum(<span class="py-str">"revenue"</span>).over(w))
+result.orderBy(<span class="py-str">"store_id"</span>, <span class="py-str">"sale_date"</span>).show()`
+    },
+    {
+      id: "rolling-avg-anomaly",
+      difficulty: "hard",
+      tables: ["daily_sales_ext"],
+      title: "7-Day Trailing Average + Anomaly Flag",
+      prompt: "For each store, compute a <b>7-day trailing average</b> revenue (current day + prior 6). Flag any day where actual revenue is more than <b>20% below</b> that trailing average as <code>POSSIBLE_ANOMALY</code>.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> daily_sales_ext (
+    store_id  <span class="fn">INT</span>,
+    sale_date <span class="fn">DATE</span>,
+    revenue   <span class="fn">DECIMAL</span>(10,2)
+);
+
+<span class="kw">INSERT INTO</span> daily_sales_ext <span class="kw">VALUES</span>
+(1,<span class="str">'2026-08-01'</span>,1000),(1,<span class="str">'2026-08-02'</span>,1050),(1,<span class="str">'2026-08-03'</span>, 980),
+(1,<span class="str">'2026-08-04'</span>,1100),(1,<span class="str">'2026-08-05'</span>,1200),(1,<span class="str">'2026-08-06'</span>,1150),
+(1,<span class="str">'2026-08-07'</span>,1080),(1,<span class="str">'2026-08-08'</span>, 300),(1,<span class="str">'2026-08-09'</span>,1120),
+(1,<span class="str">'2026-08-10'</span>,1090);`,
+      pysparkBoilerplate:
+`daily_sales_ext = spark.createDataFrame([
+    (1,<span class="py-str">"2026-08-01"</span>,1000),(1,<span class="py-str">"2026-08-02"</span>,1050),(1,<span class="py-str">"2026-08-03"</span>, 980),
+    (1,<span class="py-str">"2026-08-04"</span>,1100),(1,<span class="py-str">"2026-08-05"</span>,1200),(1,<span class="py-str">"2026-08-06"</span>,1150),
+    (1,<span class="py-str">"2026-08-07"</span>,1080),(1,<span class="py-str">"2026-08-08"</span>, 300),(1,<span class="py-str">"2026-08-09"</span>,1120),
+    (1,<span class="py-str">"2026-08-10"</span>,1090),
+], [<span class="py-str">"store_id"</span>, <span class="py-str">"sale_date"</span>, <span class="py-str">"revenue"</span>])`,
+      inputTable: {cols:["sale_date","revenue"], rows:[
+        ["2026-08-06","1150"],["2026-08-07","1080"],["2026-08-08","300"],["2026-08-09","1120"],["2026-08-10","1090"]
+      ]},
+      outputTable: {cols:["sale_date","revenue","rolling_avg_7d","flag"], rows:[
+        ["2026-08-06","1150","1080.0","OK"],["2026-08-07","1080","1080.0","OK"],
+        ["2026-08-08","300","980.0","POSSIBLE_ANOMALY"],["2026-08-09","1120","990.0","OK"],["2026-08-10","1090","1005.71","OK"]
+      ]},
+      approach: "Same frame pattern as a running total, but bounded: ROWS BETWEEN 6 PRECEDING AND CURRENT ROW instead of UNBOUNDED PRECEDING — that's the whole difference between a running total and a rolling window. The anomaly flag is a plain CASE WHEN comparing the actual value to 80% of the just-computed average; the subtlety is that this comparison can't happen in the same SELECT expression as the window function without either a subquery/CTE or repeating the window — cleanest is to compute rolling_avg_7d in a CTE, then flag in the outer SELECT.",
+      pyApproach: "rowsBetween(-6, Window.currentRow) for the bounded trailing frame. Compute the average column first, then withColumn a boolean flag off of it in a second, separate step — trying to reference the same window aggregate mid-expression gets awkward, so split it exactly like the SQL CTE does.",
+      solution:
+`<span class="kw">WITH</span> rolling <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> store_id, sale_date, revenue,
+           AVG(revenue) OVER (
+               PARTITION BY store_id
+               ORDER BY sale_date
+               ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+           ) <span class="kw">AS</span> rolling_avg_7d
+    <span class="kw">FROM</span> daily_sales_ext
+)
+<span class="kw">SELECT</span> store_id, sale_date, revenue, <span class="fn">ROUND</span>(rolling_avg_7d,2) <span class="kw">AS</span> rolling_avg_7d,
+       <span class="kw">CASE WHEN</span> revenue < 0.8 * rolling_avg_7d <span class="kw">THEN</span> <span class="str">'POSSIBLE_ANOMALY'</span> <span class="kw">ELSE</span> <span class="str">'OK'</span> <span class="kw">END</span> <span class="kw">AS</span> flag
+<span class="kw">FROM</span> rolling
+<span class="kw">ORDER BY</span> store_id, sale_date;`,
+      pysparkSolution:
+`w = (
+    Window.partitionBy(<span class="py-str">"store_id"</span>).orderBy(<span class="py-str">"sale_date"</span>)
+    .rowsBetween(-6, Window.currentRow)
+)
+rolling = daily_sales_ext.withColumn(<span class="py-str">"rolling_avg_7d"</span>, F.avg(<span class="py-str">"revenue"</span>).over(w))
+result = rolling.withColumn(
+    <span class="py-str">"flag"</span>,
+    F.when(F.col(<span class="py-str">"revenue"</span>) < 0.8 * F.col(<span class="py-str">"rolling_avg_7d"</span>), <span class="py-str">"POSSIBLE_ANOMALY"</span>).otherwise(<span class="py-str">"OK"</span>)
+)
+result.orderBy(<span class="py-str">"store_id"</span>, <span class="py-str">"sale_date"</span>).show()`
+    }
+  ]
+},
+
+{
+  name: "Gaps, Islands & Sessionization",
+  blurb: "Grouping consecutive rows into runs — by sequence for islands, by elapsed time for sessions.",
+  questions: [
+    {
+      id: "login-streak",
+      difficulty: "med",
+      tables: ["user_logins"],
+      title: "Longest Consecutive-Day Login Streak",
+      prompt: "For each user, find the length (in days) of their longest run of consecutive-day logins.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> user_logins (
+    user_id    <span class="fn">INT</span>,
+    login_date <span class="fn">DATE</span>
+);
+
+<span class="kw">INSERT INTO</span> user_logins <span class="kw">VALUES</span>
+(1,<span class="str">'2026-08-01'</span>),(1,<span class="str">'2026-08-02'</span>),(1,<span class="str">'2026-08-03'</span>),
+(1,<span class="str">'2026-08-05'</span>),(1,<span class="str">'2026-08-06'</span>),(1,<span class="str">'2026-08-07'</span>),(1,<span class="str">'2026-08-10'</span>),
+(2,<span class="str">'2026-08-01'</span>),(2,<span class="str">'2026-08-02'</span>),(2,<span class="str">'2026-08-03'</span>),(2,<span class="str">'2026-08-04'</span>),(2,<span class="str">'2026-08-05'</span>);`,
+      pysparkBoilerplate:
+`user_logins = spark.createDataFrame([
+    (1,<span class="py-str">"2026-08-01"</span>),(1,<span class="py-str">"2026-08-02"</span>),(1,<span class="py-str">"2026-08-03"</span>),
+    (1,<span class="py-str">"2026-08-05"</span>),(1,<span class="py-str">"2026-08-06"</span>),(1,<span class="py-str">"2026-08-07"</span>),(1,<span class="py-str">"2026-08-10"</span>),
+    (2,<span class="py-str">"2026-08-01"</span>),(2,<span class="py-str">"2026-08-02"</span>),(2,<span class="py-str">"2026-08-03"</span>),(2,<span class="py-str">"2026-08-04"</span>),(2,<span class="py-str">"2026-08-05"</span>),
+], [<span class="py-str">"user_id"</span>, <span class="py-str">"login_date"</span>])`,
+      inputTable: {cols:["user_id","login_date"], rows:[
+        [1,"2026-08-01"],[1,"2026-08-02"],[1,"2026-08-03"],[1,"2026-08-05"],[1,"2026-08-06"],[1,"2026-08-07"],[1,"2026-08-10"],
+        [2,"2026-08-01"],[2,"2026-08-02"],[2,"2026-08-03"],[2,"2026-08-04"],[2,"2026-08-05"]
+      ]},
+      outputTable: {cols:["user_id","longest_streak_days"], rows:[
+        [1,"3"],[2,"5"]
+      ]},
+      approach: "The core islands trick: login_date minus a ROW_NUMBER() (in day units) is <b>constant</b> for every row inside one consecutive run, and changes at each gap — because both the date and the row number advance by exactly 1 per row within a run. Group by (user_id, that constant) to get each island, COUNT(*) for its length, then MAX() per user.",
+      pyApproach: "Same identity, computed with F.row_number().over(w) and F.date_sub(login_date, rn) (or subtracting rn days) to build the island key, then two levels of groupBy/agg — one to size each island, one to take the max per user.",
+      solution:
+`<span class="kw">WITH</span> numbered <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> user_id, login_date,
+           ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) <span class="kw">AS</span> rn
+    <span class="kw">FROM</span> user_logins
+),
+islands <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> user_id, login_date <span class="kw">-</span> rn * INTERVAL <span class="str">'1'</span> DAY <span class="kw">AS</span> island_key
+    <span class="kw">FROM</span> numbered
+)
+<span class="kw">SELECT</span> user_id, <span class="fn">MAX</span>(streak_len) <span class="kw">AS</span> longest_streak_days
+<span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> user_id, island_key, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> streak_len
+    <span class="kw">FROM</span> islands
+    <span class="kw">GROUP BY</span> user_id, island_key
+) sized
+<span class="kw">GROUP BY</span> user_id
+<span class="kw">ORDER BY</span> user_id;`,
+      pysparkSolution:
+`w = Window.partitionBy(<span class="py-str">"user_id"</span>).orderBy(<span class="py-str">"login_date"</span>)
+numbered = user_logins.withColumn(<span class="py-str">"rn"</span>, F.row_number().over(w))
+islands = numbered.withColumn(<span class="py-str">"island_key"</span>, F.expr(<span class="py-str">"date_sub(login_date, rn)"</span>))
+
+sized = islands.groupBy(<span class="py-str">"user_id"</span>, <span class="py-str">"island_key"</span>).agg(F.count(<span class="py-str">"*"</span>).alias(<span class="py-str">"streak_len"</span>))
+result = sized.groupBy(<span class="py-str">"user_id"</span>).agg(F.max(<span class="py-str">"streak_len"</span>).alias(<span class="py-str">"longest_streak_days"</span>))
+result.orderBy(<span class="py-str">"user_id"</span>).show()`
+    },
+    {
+      id: "sessionize-events",
+      difficulty: "hard",
+      tables: ["page_views"],
+      title: "Sessionize Web Events (30-Minute Timeout)",
+      prompt: "Group each user's raw page-view timestamps into sessions: a new session starts whenever the gap since the previous event exceeds <b>30 minutes</b>. Return session start, end, event count, and duration in minutes.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> page_views (
+    user_id    <span class="fn">INT</span>,
+    event_time <span class="fn">TIMESTAMP</span>
+);
+
+<span class="kw">INSERT INTO</span> page_views <span class="kw">VALUES</span>
+(1,<span class="str">'2026-08-01 09:00:00'</span>),(1,<span class="str">'2026-08-01 09:05:00'</span>),(1,<span class="str">'2026-08-01 09:12:00'</span>),
+(1,<span class="str">'2026-08-01 10:00:00'</span>),(1,<span class="str">'2026-08-01 10:20:00'</span>),
+(1,<span class="str">'2026-08-01 14:00:00'</span>);`,
+      pysparkBoilerplate:
+`page_views = spark.createDataFrame([
+    (1,<span class="py-str">"2026-08-01 09:00:00"</span>),(1,<span class="py-str">"2026-08-01 09:05:00"</span>),(1,<span class="py-str">"2026-08-01 09:12:00"</span>),
+    (1,<span class="py-str">"2026-08-01 10:00:00"</span>),(1,<span class="py-str">"2026-08-01 10:20:00"</span>),
+    (1,<span class="py-str">"2026-08-01 14:00:00"</span>),
+], [<span class="py-str">"user_id"</span>, <span class="py-str">"event_time"</span>]).withColumn(<span class="py-str">"event_time"</span>, F.col(<span class="py-str">"event_time"</span>).cast(<span class="py-str">"timestamp"</span>))`,
+      inputTable: {cols:["user_id","event_time"], rows:[
+        [1,"09:00:00"],[1,"09:05:00"],[1,"09:12:00"],[1,"10:00:00"],[1,"10:20:00"],[1,"14:00:00"]
+      ]},
+      outputTable: {cols:["user_id","session_id","start_time","end_time","event_count","duration_min"], rows:[
+        [1,"1","09:00:00","09:12:00","3","12"],[1,"2","10:00:00","10:20:00","2","20"],[1,"3","14:00:00","14:00:00","1","0"]
+      ]},
+      approach: "Two-step window pattern that generalizes way beyond sessions: (1) LAG() the previous event_time per user, and flag is_new_session = 1 when the gap exceeds 30 minutes (or it's the user's first row). (2) A running SUM() of that flag, over the same ordering, turns the 0/1 flags into a monotonically increasing session_id — every row keeps summing until the next flag bumps it. Then it's a plain GROUP BY on (user_id, session_id) for MIN/MAX/COUNT.",
+      pyApproach: "F.lag() for the gap check, F.sum() with an unbounded-preceding window for the running session counter — the same 'flag, then cumulative-sum the flag' idiom used for islands, just driven by elapsed time instead of a sequence gap.",
+      solution:
+`<span class="kw">WITH</span> flagged <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> user_id, event_time,
+           <span class="kw">CASE WHEN</span> event_time > LAG(event_time) OVER (PARTITION BY user_id ORDER BY event_time) <span class="kw">+</span> INTERVAL <span class="str">'30'</span> MINUTE
+                <span class="kw">OR</span> LAG(event_time) OVER (PARTITION BY user_id ORDER BY event_time) <span class="kw">IS NULL</span>
+                <span class="kw">THEN</span> 1 <span class="kw">ELSE</span> 0 <span class="kw">END</span> <span class="kw">AS</span> is_new_session
+    <span class="kw">FROM</span> page_views
+),
+sessioned <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> user_id, event_time,
+           <span class="fn">SUM</span>(is_new_session) OVER (PARTITION BY user_id ORDER BY event_time
+               ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) <span class="kw">AS</span> session_id
+    <span class="kw">FROM</span> flagged
+)
+<span class="kw">SELECT</span> user_id, session_id,
+       <span class="fn">MIN</span>(event_time) <span class="kw">AS</span> start_time, <span class="fn">MAX</span>(event_time) <span class="kw">AS</span> end_time,
+       <span class="fn">COUNT</span>(*) <span class="kw">AS</span> event_count,
+       <span class="fn">TIMESTAMPDIFF</span>(MINUTE, <span class="fn">MIN</span>(event_time), <span class="fn">MAX</span>(event_time)) <span class="kw">AS</span> duration_min
+<span class="kw">FROM</span> sessioned
+<span class="kw">GROUP BY</span> user_id, session_id
+<span class="kw">ORDER BY</span> user_id, session_id;`,
+      pysparkSolution:
+`w = Window.partitionBy(<span class="py-str">"user_id"</span>).orderBy(<span class="py-str">"event_time"</span>)
+
+flagged = page_views.withColumn(<span class="py-str">"prev_time"</span>, F.lag(<span class="py-str">"event_time"</span>).over(w)).withColumn(
+    <span class="py-str">"is_new_session"</span>,
+    F.when(
+        F.col(<span class="py-str">"prev_time"</span>).isNull() |
+        (F.col(<span class="py-str">"event_time"</span>).cast(<span class="py-str">"long"</span>) - F.col(<span class="py-str">"prev_time"</span>).cast(<span class="py-str">"long"</span>) > 30*60),
+        1
+    ).otherwise(0)
+)
+
+w_run = w.rowsBetween(Window.unboundedPreceding, Window.currentRow)
+sessioned = flagged.withColumn(<span class="py-str">"session_id"</span>, F.sum(<span class="py-str">"is_new_session"</span>).over(w_run))
+
+result = (
+    sessioned.groupBy(<span class="py-str">"user_id"</span>, <span class="py-str">"session_id"</span>)
+    .agg(F.min(<span class="py-str">"event_time"</span>).alias(<span class="py-str">"start_time"</span>),
+         F.max(<span class="py-str">"event_time"</span>).alias(<span class="py-str">"end_time"</span>),
+         F.count(<span class="py-str">"*"</span>).alias(<span class="py-str">"event_count"</span>))
+    .withColumn(<span class="py-str">"duration_min"</span>, (F.col(<span class="py-str">"end_time"</span>).cast(<span class="py-str">"long"</span>) - F.col(<span class="py-str">"start_time"</span>).cast(<span class="py-str">"long"</span>))/60)
+)
+result.orderBy(<span class="py-str">"user_id"</span>, <span class="py-str">"session_id"</span>).show()`
+    }
+  ]
+},
+
+{
+  name: "Self-Joins",
+  blurb: "Comparing a table to itself — hierarchy comparisons and interval-overlap detection.",
+  questions: [
+    {
+      id: "emp-vs-manager",
+      difficulty: "med",
+      tables: ["employees_mgr"],
+      title: "Employees Earning More Than Their Manager",
+      prompt: "List employees whose salary is higher than their direct manager's salary.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> employees_mgr (
+    employee_id <span class="fn">INT</span>,
+    name        <span class="fn">VARCHAR</span>(30),
+    manager_id  <span class="fn">INT</span>,
+    salary      <span class="fn">DECIMAL</span>(10,2)
+);
+
+<span class="kw">INSERT INTO</span> employees_mgr <span class="kw">VALUES</span>
+(1,<span class="str">'Alice'</span>,<span class="kw">NULL</span>,150000),
+(2,<span class="str">'Bob'</span>,1,120000),
+(3,<span class="str">'Carol'</span>,1,160000),
+(4,<span class="str">'Dave'</span>,2,100000),
+(5,<span class="str">'Eve'</span>,2,130000);`,
+      pysparkBoilerplate:
+`employees_mgr = spark.createDataFrame([
+    (1,<span class="py-str">"Alice"</span>,<span class="py-kw">None</span>,150000),(2,<span class="py-str">"Bob"</span>,1,120000),(3,<span class="py-str">"Carol"</span>,1,160000),
+    (4,<span class="py-str">"Dave"</span>,2,100000),(5,<span class="py-str">"Eve"</span>,2,130000),
+], [<span class="py-str">"employee_id"</span>, <span class="py-str">"name"</span>, <span class="py-str">"manager_id"</span>, <span class="py-str">"salary"</span>])`,
+      inputTable: {cols:["employee_id","name","manager_id","salary"], rows:[
+        [1,"Alice","NULL","150000"],[2,"Bob","1","120000"],[3,"Carol","1","160000"],[4,"Dave","2","100000"],[5,"Eve","2","130000"]
+      ]},
+      outputTable: {cols:["employee","salary","manager","manager_salary"], rows:[
+        ["Carol","160000","Alice","150000"],["Eve","130000","Bob","120000"]
+      ]},
+      approach: "Join the table to itself, aliasing one copy as the employee side and one as the manager side, joined on e.manager_id = m.employee_id. Filter e.salary > m.salary. NULL manager_ids (the CEO) simply drop out of an inner join — no special handling needed.",
+      pyApproach: "df.alias('e').join(df.alias('m'), on=col('e.manager_id')==col('m.employee_id')) then filter e.salary > m.salary — an ordinary self-join, just two aliases of the same DataFrame.",
+      solution:
+`<span class="kw">SELECT</span> e.name <span class="kw">AS</span> employee, e.salary,
+       m.name <span class="kw">AS</span> manager, m.salary <span class="kw">AS</span> manager_salary
+<span class="kw">FROM</span> employees_mgr e
+<span class="kw">JOIN</span> employees_mgr m <span class="kw">ON</span> e.manager_id = m.employee_id
+<span class="kw">WHERE</span> e.salary > m.salary
+<span class="kw">ORDER BY</span> employee;`,
+      pysparkSolution:
+`e = employees_mgr.alias(<span class="py-str">"e"</span>)
+m = employees_mgr.alias(<span class="py-str">"m"</span>)
+
+result = (
+    e.join(m, F.col(<span class="py-str">"e.manager_id"</span>) == F.col(<span class="py-str">"m.employee_id"</span>))
+     .filter(F.col(<span class="py-str">"e.salary"</span>) > F.col(<span class="py-str">"m.salary"</span>))
+     .select(
+        F.col(<span class="py-str">"e.name"</span>).alias(<span class="py-str">"employee"</span>), F.col(<span class="py-str">"e.salary"</span>),
+        F.col(<span class="py-str">"m.name"</span>).alias(<span class="py-str">"manager"</span>), F.col(<span class="py-str">"m.salary"</span>).alias(<span class="py-str">"manager_salary"</span>)
+     )
+     .orderBy(<span class="py-str">"employee"</span>)
+)
+result.show()`
+    },
+    {
+      id: "overlapping-assignments",
+      difficulty: "hard",
+      tables: ["assignments"],
+      title: "Find Overlapping Project Assignments",
+      prompt: "Two employees on the <b>same project</b> can't be assigned to overlapping date ranges without a conflict. Find every conflicting pair, along with the overlap window.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> assignments (
+    employee_id <span class="fn">VARCHAR</span>(10),
+    project_id  <span class="fn">INT</span>,
+    start_date  <span class="fn">DATE</span>,
+    end_date    <span class="fn">DATE</span>
+);
+
+<span class="kw">INSERT INTO</span> assignments <span class="kw">VALUES</span>
+(<span class="str">'emp1'</span>,100,<span class="str">'2026-01-01'</span>,<span class="str">'2026-03-01'</span>),
+(<span class="str">'emp2'</span>,100,<span class="str">'2026-02-01'</span>,<span class="str">'2026-04-01'</span>),
+(<span class="str">'emp3'</span>,100,<span class="str">'2026-05-01'</span>,<span class="str">'2026-06-01'</span>),
+(<span class="str">'empA'</span>,200,<span class="str">'2026-01-10'</span>,<span class="str">'2026-01-20'</span>),
+(<span class="str">'empB'</span>,200,<span class="str">'2026-01-15'</span>,<span class="str">'2026-01-25'</span>);`,
+      pysparkBoilerplate:
+`assignments = spark.createDataFrame([
+    (<span class="py-str">"emp1"</span>,100,<span class="py-str">"2026-01-01"</span>,<span class="py-str">"2026-03-01"</span>),
+    (<span class="py-str">"emp2"</span>,100,<span class="py-str">"2026-02-01"</span>,<span class="py-str">"2026-04-01"</span>),
+    (<span class="py-str">"emp3"</span>,100,<span class="py-str">"2026-05-01"</span>,<span class="py-str">"2026-06-01"</span>),
+    (<span class="py-str">"empA"</span>,200,<span class="py-str">"2026-01-10"</span>,<span class="py-str">"2026-01-20"</span>),
+    (<span class="py-str">"empB"</span>,200,<span class="py-str">"2026-01-15"</span>,<span class="py-str">"2026-01-25"</span>),
+], [<span class="py-str">"employee_id"</span>, <span class="py-str">"project_id"</span>, <span class="py-str">"start_date"</span>, <span class="py-str">"end_date"</span>])`,
+      inputTable: {cols:["employee_id","project_id","start_date","end_date"], rows:[
+        ["emp1","100","2026-01-01","2026-03-01"],["emp2","100","2026-02-01","2026-04-01"],["emp3","100","2026-05-01","2026-06-01"],
+        ["empA","200","2026-01-10","2026-01-20"],["empB","200","2026-01-15","2026-01-25"]
+      ]},
+      outputTable: {cols:["project_id","employee_a","employee_b","overlap_start","overlap_end"], rows:[
+        ["100","emp1","emp2","2026-02-01","2026-03-01"],["200","empA","empB","2026-01-15","2026-01-20"]
+      ]},
+      approach: "Self-join on project_id with a.employee_id < b.employee_id — the inequality both avoids joining a row to itself and avoids emitting each pair twice (A,B and B,A). The overlap test is the standard interval-overlap inequality: a.start <= b.end AND b.start <= a.end. Once you know two ranges overlap, the overlap window itself is simply GREATEST(starts) to LEAST(ends).",
+      pyApproach: "Same self-join, using a string comparison on employee_id (< works fine for the dedup-and-no-self-pair trick) plus the same GREATEST/LEAST-equivalent via F.greatest / F.least.",
+      solution:
+`<span class="kw">SELECT</span> a.project_id,
+       a.employee_id <span class="kw">AS</span> employee_a, b.employee_id <span class="kw">AS</span> employee_b,
+       <span class="fn">GREATEST</span>(a.start_date, b.start_date) <span class="kw">AS</span> overlap_start,
+       <span class="fn">LEAST</span>(a.end_date, b.end_date) <span class="kw">AS</span> overlap_end
+<span class="kw">FROM</span> assignments a
+<span class="kw">JOIN</span> assignments b
+  <span class="kw">ON</span> a.project_id = b.project_id
+ <span class="kw">AND</span> a.employee_id < b.employee_id
+ <span class="kw">AND</span> a.start_date <= b.end_date
+ <span class="kw">AND</span> b.start_date <= a.end_date
+<span class="kw">ORDER BY</span> a.project_id;`,
+      pysparkSolution:
+`a = assignments.alias(<span class="py-str">"a"</span>)
+b = assignments.alias(<span class="py-str">"b"</span>)
+
+cond = (
+    (F.col(<span class="py-str">"a.project_id"</span>) == F.col(<span class="py-str">"b.project_id"</span>)) &
+    (F.col(<span class="py-str">"a.employee_id"</span>) < F.col(<span class="py-str">"b.employee_id"</span>)) &
+    (F.col(<span class="py-str">"a.start_date"</span>) <= F.col(<span class="py-str">"b.end_date"</span>)) &
+    (F.col(<span class="py-str">"b.start_date"</span>) <= F.col(<span class="py-str">"a.end_date"</span>))
+)
+
+result = a.join(b, cond).select(
+    F.col(<span class="py-str">"a.project_id"</span>),
+    F.col(<span class="py-str">"a.employee_id"</span>).alias(<span class="py-str">"employee_a"</span>), F.col(<span class="py-str">"b.employee_id"</span>).alias(<span class="py-str">"employee_b"</span>),
+    F.greatest(<span class="py-str">"a.start_date"</span>, <span class="py-str">"b.start_date"</span>).alias(<span class="py-str">"overlap_start"</span>),
+    F.least(<span class="py-str">"a.end_date"</span>, <span class="py-str">"b.end_date"</span>).alias(<span class="py-str">"overlap_end"</span>),
+)
+result.orderBy(<span class="py-str">"project_id"</span>).show()`
+    }
+  ]
+},
+
+{
+  name: "Recursive / Hierarchical Queries",
+  blurb: "WITH RECURSIVE — walking a tree downward, and multiplying quantities through a bill of materials.",
+  questions: [
+    {
+      id: "org-reports",
+      difficulty: "med",
+      tables: ["org_chart"],
+      title: "All Direct + Indirect Reports of a Manager",
+      prompt: "Given an org chart, return everyone who reports to Alice (employee_id 1), directly or through any number of intermediate managers.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> org_chart (
+    employee_id <span class="fn">INT</span>,
+    name        <span class="fn">VARCHAR</span>(30),
+    manager_id  <span class="fn">INT</span>
+);
+
+<span class="kw">INSERT INTO</span> org_chart <span class="kw">VALUES</span>
+(1,<span class="str">'Alice'</span>,<span class="kw">NULL</span>),
+(2,<span class="str">'Bob'</span>,1),
+(3,<span class="str">'Carol'</span>,1),
+(4,<span class="str">'Dave'</span>,2),
+(5,<span class="str">'Eve'</span>,4);`,
+      pysparkBoilerplate:
+`org_chart = spark.createDataFrame([
+    (1,<span class="py-str">"Alice"</span>,<span class="py-kw">None</span>),(2,<span class="py-str">"Bob"</span>,1),(3,<span class="py-str">"Carol"</span>,1),
+    (4,<span class="py-str">"Dave"</span>,2),(5,<span class="py-str">"Eve"</span>,4),
+], [<span class="py-str">"employee_id"</span>, <span class="py-str">"name"</span>, <span class="py-str">"manager_id"</span>])`,
+      inputTable: {cols:["employee_id","name","manager_id"], rows:[
+        [1,"Alice","NULL"],[2,"Bob","1"],[3,"Carol","1"],[4,"Dave","2"],[5,"Eve","4"]
+      ]},
+      outputTable: {cols:["name","depth"], rows:[
+        ["Bob","1"],["Carol","1"],["Dave","2"],["Eve","3"]
+      ]},
+      approach: "WITH RECURSIVE has an anchor member (Alice's direct reports, depth 1) UNION ALL a recursive member that joins the CTE back to org_chart one more hop down, incrementing depth each time. The recursion terminates naturally when a join finds no more matching manager_ids.",
+      pyApproach: "PySpark's DataFrame API has no native recursive CTE — the standard pattern is a Python while-loop that repeatedly joins the 'frontier' of newly-found employees back to the table and unions the results, stopping when an iteration finds zero new rows.",
+      solution:
+`<span class="kw">WITH RECURSIVE</span> reports <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> employee_id, name, manager_id, 1 <span class="kw">AS</span> depth
+    <span class="kw">FROM</span> org_chart
+    <span class="kw">WHERE</span> manager_id = 1
+
+    <span class="kw">UNION ALL</span>
+
+    <span class="kw">SELECT</span> o.employee_id, o.name, o.manager_id, r.depth + 1
+    <span class="kw">FROM</span> org_chart o
+    <span class="kw">JOIN</span> reports r <span class="kw">ON</span> o.manager_id = r.employee_id
+)
+<span class="kw">SELECT</span> name, depth <span class="kw">FROM</span> reports <span class="kw">ORDER BY</span> depth, name;`,
+      pysparkSolution:
+`frontier = org_chart.filter(F.col(<span class="py-str">"manager_id"</span>) == 1).withColumn(<span class="py-str">"depth"</span>, F.lit(1))
+result = frontier
+depth = 1
+<span class="py-kw">while</span> frontier.count() > 0:
+    depth += 1
+    frontier = (
+        org_chart.join(frontier.select(<span class="py-str">"employee_id"</span>), org_chart.manager_id == frontier.employee_id)
+        .select(<span class="py-str">"employee_id"</span>, <span class="py-str">"name"</span>, <span class="py-str">"manager_id"</span>)
+        .withColumn(<span class="py-str">"depth"</span>, F.lit(depth))
+    )
+    result = result.unionByName(frontier)
+result.orderBy(<span class="py-str">"depth"</span>, <span class="py-str">"name"</span>).show()`
+    },
+    {
+      id: "bom-explosion",
+      difficulty: "hard",
+      tables: ["bom"],
+      title: "Bill-of-Materials Explosion",
+      prompt: "Given a parts hierarchy where each parent needs some quantity of each child, compute the <b>total quantity of every component</b> required to build <b>1 Bike</b> — multiplying quantities down every level of the tree.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> bom (
+    parent_part <span class="fn">VARCHAR</span>(20),
+    child_part  <span class="fn">VARCHAR</span>(20),
+    qty_per     <span class="fn">INT</span>
+);
+
+<span class="kw">INSERT INTO</span> bom <span class="kw">VALUES</span>
+(<span class="str">'Bike'</span>,<span class="str">'Frame'</span>,1),
+(<span class="str">'Bike'</span>,<span class="str">'Wheel'</span>,2),
+(<span class="str">'Wheel'</span>,<span class="str">'Tire'</span>,1),
+(<span class="str">'Wheel'</span>,<span class="str">'Rim'</span>,1),
+(<span class="str">'Frame'</span>,<span class="str">'Bolt'</span>,4);`,
+      pysparkBoilerplate:
+`bom = spark.createDataFrame([
+    (<span class="py-str">"Bike"</span>,<span class="py-str">"Frame"</span>,1),(<span class="py-str">"Bike"</span>,<span class="py-str">"Wheel"</span>,2),
+    (<span class="py-str">"Wheel"</span>,<span class="py-str">"Tire"</span>,1),(<span class="py-str">"Wheel"</span>,<span class="py-str">"Rim"</span>,1),
+    (<span class="py-str">"Frame"</span>,<span class="py-str">"Bolt"</span>,4),
+], [<span class="py-str">"parent_part"</span>, <span class="py-str">"child_part"</span>, <span class="py-str">"qty_per"</span>])`,
+      inputTable: {cols:["parent_part","child_part","qty_per"], rows:[
+        ["Bike","Frame","1"],["Bike","Wheel","2"],["Wheel","Tire","1"],["Wheel","Rim","1"],["Frame","Bolt","4"]
+      ]},
+      outputTable: {cols:["component","total_qty_for_1_bike"], rows:[
+        ["Frame","1"],["Wheel","2"],["Tire","2"],["Rim","2"],["Bolt","4"]
+      ]},
+      approach: "Recursive CTE where the running quantity multiplies rather than increments: total_qty starts at 1 for Bike's direct children, and each recursive step multiplies the parent's accumulated total_qty by that step's qty_per — so a Wheel's Tire inherits 2 (wheels) × 1 (tire per wheel) = 2, and Frame's Bolt inherits 1 × 4 = 4. A real BOM can be a DAG (the same part reachable via two paths) and could in principle be cyclic — a robust version tracks a visited-path string and refuses to recurse into a part already in the current path, which is worth mentioning even if this sample data is a clean tree.",
+      pyApproach: "The same iterative frontier-join pattern as the org chart, except each hop multiplies a running quantity column (F.col('total_qty') * F.col('qty_per')) instead of just carrying rows forward, and components appearing under multiple parents get summed at the end with a final groupBy.",
+      solution:
+`<span class="kw">WITH RECURSIVE</span> exploded <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> child_part <span class="kw">AS</span> component, qty_per <span class="kw">AS</span> total_qty, ARRAY[parent_part] <span class="kw">AS</span> path
+    <span class="kw">FROM</span> bom
+    <span class="kw">WHERE</span> parent_part = <span class="str">'Bike'</span>
+
+    <span class="kw">UNION ALL</span>
+
+    <span class="kw">SELECT</span> b.child_part, e.total_qty * b.qty_per, e.path <span class="kw">||</span> b.parent_part
+    <span class="kw">FROM</span> bom b
+    <span class="kw">JOIN</span> exploded e <span class="kw">ON</span> b.parent_part = e.component
+    <span class="kw">WHERE NOT</span> b.parent_part = <span class="fn">ANY</span>(e.path)  <span class="com">-- cycle guard</span>
+)
+<span class="kw">SELECT</span> component, <span class="fn">SUM</span>(total_qty) <span class="kw">AS</span> total_qty_for_1_bike
+<span class="kw">FROM</span> exploded
+<span class="kw">GROUP BY</span> component
+<span class="kw">ORDER BY</span> component;`,
+      pysparkSolution:
+`frontier = (
+    bom.filter(F.col(<span class="py-str">"parent_part"</span>) == <span class="py-str">"Bike"</span>)
+    .select(F.col(<span class="py-str">"child_part"</span>).alias(<span class="py-str">"component"</span>), F.col(<span class="py-str">"qty_per"</span>).alias(<span class="py-str">"total_qty"</span>))
+)
+all_levels = frontier
+<span class="py-kw">while</span> frontier.count() > 0:
+    frontier = (
+        bom.join(frontier, bom.parent_part == frontier.component)
+        .select(F.col(<span class="py-str">"child_part"</span>).alias(<span class="py-str">"component"</span>),
+                (F.col(<span class="py-str">"total_qty"</span>) * F.col(<span class="py-str">"qty_per"</span>)).alias(<span class="py-str">"total_qty"</span>))
+    )
+    all_levels = all_levels.unionByName(frontier)
+
+result = all_levels.groupBy(<span class="py-str">"component"</span>).agg(F.sum(<span class="py-str">"total_qty"</span>).alias(<span class="py-str">"total_qty_for_1_bike"</span>))
+result.orderBy(<span class="py-str">"component"</span>).show()`
+    }
+  ]
+},
+
+{
+  name: "Deduplication",
+  blurb: "ROW_NUMBER() with the right ORDER BY — from 'keep the newest' to 'keep the most complete.'",
+  questions: [
+    {
+      id: "dedup-latest",
+      difficulty: "med",
+      tables: ["customer_updates"],
+      title: "Deduplicate: Keep Only the Latest Record",
+      prompt: "Each customer has multiple update rows over time. Keep only the single most recent row per <code>customer_id</code>.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> customer_updates (
+    customer_id <span class="fn">INT</span>,
+    updated_at  <span class="fn">TIMESTAMP</span>,
+    email       <span class="fn">VARCHAR</span>(50)
+);
+
+<span class="kw">INSERT INTO</span> customer_updates <span class="kw">VALUES</span>
+(1,<span class="str">'2026-01-01 10:00'</span>,<span class="str">'old@x.com'</span>),
+(1,<span class="str">'2026-03-15 09:00'</span>,<span class="str">'mid@x.com'</span>),
+(1,<span class="str">'2026-06-01 12:00'</span>,<span class="str">'new@x.com'</span>),
+(2,<span class="str">'2026-02-01 08:00'</span>,<span class="str">'a@x.com'</span>);`,
+      pysparkBoilerplate:
+`customer_updates = spark.createDataFrame([
+    (1,<span class="py-str">"2026-01-01 10:00"</span>,<span class="py-str">"old@x.com"</span>),
+    (1,<span class="py-str">"2026-03-15 09:00"</span>,<span class="py-str">"mid@x.com"</span>),
+    (1,<span class="py-str">"2026-06-01 12:00"</span>,<span class="py-str">"new@x.com"</span>),
+    (2,<span class="py-str">"2026-02-01 08:00"</span>,<span class="py-str">"a@x.com"</span>),
+], [<span class="py-str">"customer_id"</span>, <span class="py-str">"updated_at"</span>, <span class="py-str">"email"</span>])`,
+      inputTable: {cols:["customer_id","updated_at","email"], rows:[
+        [1,"2026-01-01 10:00","old@x.com"],[1,"2026-03-15 09:00","mid@x.com"],[1,"2026-06-01 12:00","new@x.com"],[2,"2026-02-01 08:00","a@x.com"]
+      ]},
+      outputTable: {cols:["customer_id","updated_at","email"], rows:[
+        [1,"2026-06-01 12:00","new@x.com"],[2,"2026-02-01 08:00","a@x.com"]
+      ]},
+      approach: "ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) numbers each customer's rows newest-first; keep only rn = 1. Prefer this over MAX(updated_at)+JOIN or a correlated subquery — it's a single pass and doesn't need a self-join back to fetch the rest of the row's columns.",
+      pyApproach: "Same Window + F.row_number(), filter rn == 1. This is the standard PySpark dedup idiom — reach for it before dropDuplicates(), which can't express 'newest wins' without extra sorting steps of its own.",
+      solution:
+`<span class="kw">WITH</span> ranked <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) <span class="kw">AS</span> rn
+    <span class="kw">FROM</span> customer_updates
+)
+<span class="kw">SELECT</span> customer_id, updated_at, email
+<span class="kw">FROM</span> ranked
+<span class="kw">WHERE</span> rn = 1
+<span class="kw">ORDER BY</span> customer_id;`,
+      pysparkSolution:
+`w = Window.partitionBy(<span class="py-str">"customer_id"</span>).orderBy(F.desc(<span class="py-str">"updated_at"</span>))
+result = (
+    customer_updates.withColumn(<span class="py-str">"rn"</span>, F.row_number().over(w))
+    .filter(F.col(<span class="py-str">"rn"</span>) == 1)
+    .drop(<span class="py-str">"rn"</span>)
+    .orderBy(<span class="py-str">"customer_id"</span>)
+)
+result.show()`
+    },
+    {
+      id: "dedup-most-complete",
+      difficulty: "hard",
+      tables: ["customer_profile"],
+      title: "Deduplicate by Completeness, Not Just Recency",
+      prompt: "Customer profile rows are duplicated across syncs. Keep the row with the <b>fewest NULL fields</b> (most complete); only if completeness ties, prefer the most recently updated row.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> customer_profile (
+    customer_id <span class="fn">INT</span>,
+    updated_at  <span class="fn">TIMESTAMP</span>,
+    email       <span class="fn">VARCHAR</span>(50),
+    phone       <span class="fn">VARCHAR</span>(20),
+    address     <span class="fn">VARCHAR</span>(80)
+);
+
+<span class="kw">INSERT INTO</span> customer_profile <span class="kw">VALUES</span>
+(1,<span class="str">'2026-01-01'</span>,<span class="str">'a@x.com'</span>,<span class="kw">NULL</span>,<span class="kw">NULL</span>),
+(1,<span class="str">'2026-03-01'</span>,<span class="str">'a@x.com'</span>,<span class="str">'555-0100'</span>,<span class="kw">NULL</span>),
+(1,<span class="str">'2025-12-01'</span>,<span class="str">'a@x.com'</span>,<span class="str">'555-0100'</span>,<span class="str">'12 Elm St'</span>);`,
+      pysparkBoilerplate:
+`customer_profile = spark.createDataFrame([
+    (1,<span class="py-str">"2026-01-01"</span>,<span class="py-str">"a@x.com"</span>,<span class="py-kw">None</span>,<span class="py-kw">None</span>),
+    (1,<span class="py-str">"2026-03-01"</span>,<span class="py-str">"a@x.com"</span>,<span class="py-str">"555-0100"</span>,<span class="py-kw">None</span>),
+    (1,<span class="py-str">"2025-12-01"</span>,<span class="py-str">"a@x.com"</span>,<span class="py-str">"555-0100"</span>,<span class="py-str">"12 Elm St"</span>),
+], [<span class="py-str">"customer_id"</span>, <span class="py-str">"updated_at"</span>, <span class="py-str">"email"</span>, <span class="py-str">"phone"</span>, <span class="py-str">"address"</span>])`,
+      inputTable: {cols:["customer_id","updated_at","email","phone","address"], rows:[
+        [1,"2026-01-01","a@x.com","NULL","NULL"],
+        [1,"2026-03-01","a@x.com","555-0100","NULL"],
+        [1,"2025-12-01","a@x.com","555-0100","12 Elm St"]
+      ]},
+      outputTable: {cols:["customer_id","updated_at","email","phone","address"], rows:[
+        [1,"2025-12-01","a@x.com","555-0100","12 Elm St"]
+      ]},
+      approach: "The interview twist: recency isn't the sort key, completeness is — and completeness has to be computed as a column before it can be ordered on. Score each row with a CASE-based count of non-null fields, then ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY completeness_score DESC, updated_at DESC), keep rn = 1. Notice the row that wins here is the <i>oldest</i> one (Dec 1) — proof the ordering logic actually applied completeness first, not just recency.",
+      pyApproach: "Build the completeness score by summing F.when(col.isNotNull(), 1).otherwise(0) across the nullable columns, then the same Window + row_number pattern, ordering by that score descending and updated_at descending as the tiebreak.",
+      solution:
+`<span class="kw">WITH</span> scored <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> *,
+        (<span class="kw">CASE WHEN</span> email   <span class="kw">IS NOT NULL</span> <span class="kw">THEN</span> 1 <span class="kw">ELSE</span> 0 <span class="kw">END</span> <span class="kw">+</span>
+         <span class="kw">CASE WHEN</span> phone   <span class="kw">IS NOT NULL</span> <span class="kw">THEN</span> 1 <span class="kw">ELSE</span> 0 <span class="kw">END</span> <span class="kw">+</span>
+         <span class="kw">CASE WHEN</span> address <span class="kw">IS NOT NULL</span> <span class="kw">THEN</span> 1 <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> completeness_score
+    <span class="kw">FROM</span> customer_profile
+),
+ranked <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> *, ROW_NUMBER() OVER (
+        PARTITION BY customer_id
+        ORDER BY completeness_score DESC, updated_at DESC
+    ) <span class="kw">AS</span> rn
+    <span class="kw">FROM</span> scored
+)
+<span class="kw">SELECT</span> customer_id, updated_at, email, phone, address
+<span class="kw">FROM</span> ranked
+<span class="kw">WHERE</span> rn = 1;`,
+      pysparkSolution:
+`nullable_cols = [<span class="py-str">"email"</span>, <span class="py-str">"phone"</span>, <span class="py-str">"address"</span>]
+score_expr = sum(F.when(F.col(c).isNotNull(), 1).otherwise(0) <span class="py-kw">for</span> c <span class="py-kw">in</span> nullable_cols)
+
+scored = customer_profile.withColumn(<span class="py-str">"completeness_score"</span>, score_expr)
+
+w = Window.partitionBy(<span class="py-str">"customer_id"</span>).orderBy(
+    F.desc(<span class="py-str">"completeness_score"</span>), F.desc(<span class="py-str">"updated_at"</span>)
+)
+result = (
+    scored.withColumn(<span class="py-str">"rn"</span>, F.row_number().over(w))
+    .filter(F.col(<span class="py-str">"rn"</span>) == 1)
+    .drop(<span class="py-str">"rn"</span>, <span class="py-str">"completeness_score"</span>)
+)
+result.show()`
+    }
+  ]
+},
+
+{
+  name: "Pivot & Unpivot",
+  blurb: "Rows-to-columns with conditional aggregation, and the reverse trip back to long format.",
+  questions: [
+    {
+      id: "pivot-monthly",
+      difficulty: "med",
+      tables: ["sales_long"],
+      title: "Pivot: Monthly Revenue per Product, Rows → Columns",
+      prompt: "Transform the long-format <code>sales_long</code> table into a wide report — one row per product, one column per month.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> sales_long (
+    product_name <span class="fn">VARCHAR</span>(40),
+    month_name   <span class="fn">VARCHAR</span>(10),
+    revenue      <span class="fn">DECIMAL</span>(10,2)
+);
+
+<span class="kw">INSERT INTO</span> sales_long <span class="kw">VALUES</span>
+(<span class="str">'Widget A'</span>,<span class="str">'Jan'</span>,5000),(<span class="str">'Widget A'</span>,<span class="str">'Feb'</span>,5400),(<span class="str">'Widget A'</span>,<span class="str">'Mar'</span>,4800),
+(<span class="str">'Widget B'</span>,<span class="str">'Jan'</span>,3000),(<span class="str">'Widget B'</span>,<span class="str">'Feb'</span>,3100),(<span class="str">'Widget B'</span>,<span class="str">'Mar'</span>,3600);`,
+      pysparkBoilerplate:
+`sales_long = spark.createDataFrame([
+    (<span class="py-str">"Widget A"</span>,<span class="py-str">"Jan"</span>,5000),(<span class="py-str">"Widget A"</span>,<span class="py-str">"Feb"</span>,5400),(<span class="py-str">"Widget A"</span>,<span class="py-str">"Mar"</span>,4800),
+    (<span class="py-str">"Widget B"</span>,<span class="py-str">"Jan"</span>,3000),(<span class="py-str">"Widget B"</span>,<span class="py-str">"Feb"</span>,3100),(<span class="py-str">"Widget B"</span>,<span class="py-str">"Mar"</span>,3600),
+], [<span class="py-str">"product_name"</span>, <span class="py-str">"month_name"</span>, <span class="py-str">"revenue"</span>])`,
+      inputTable: {cols:["product_name","month_name","revenue"], rows:[
+        ["Widget A","Jan","5000"],["Widget A","Feb","5400"],["Widget A","Mar","4800"],
+        ["Widget B","Jan","3000"],["Widget B","Feb","3100"],["Widget B","Mar","3600"]
+      ]},
+      outputTable: {cols:["product_name","Jan","Feb","Mar"], rows:[
+        ["Widget A","5000","5400","4800"],["Widget B","3000","3100","3600"]
+      ]},
+      approach: "Conditional aggregation (SUM(CASE WHEN month_name = 'Jan' THEN revenue END)) is the portable version that works on any SQL engine. Native PIVOT syntax (Spark SQL, Snowflake) is a shortcut for the same idea — know both, because interviewers often want to see the manual version even when the engine offers a keyword for it.",
+      pyApproach: "PySpark's DataFrame API has a native .pivot() on GroupedData. Passing an explicit value list (Jan/Feb/Mar) matters for performance — without it, Spark runs an extra pass just to discover the distinct pivot values before it can build the wide schema.",
+      solution:
+`<span class="com">-- Portable version: conditional aggregation</span>
+<span class="kw">SELECT</span> product_name,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> month_name = <span class="str">'Jan'</span> <span class="kw">THEN</span> revenue <span class="kw">END</span>) <span class="kw">AS</span> Jan,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> month_name = <span class="str">'Feb'</span> <span class="kw">THEN</span> revenue <span class="kw">END</span>) <span class="kw">AS</span> Feb,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> month_name = <span class="str">'Mar'</span> <span class="kw">THEN</span> revenue <span class="kw">END</span>) <span class="kw">AS</span> Mar
+<span class="kw">FROM</span> sales_long
+<span class="kw">GROUP BY</span> product_name
+<span class="kw">ORDER BY</span> product_name;
+
+<span class="com">-- Native PIVOT (Spark SQL / Snowflake):</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> sales_long
+PIVOT ( <span class="fn">SUM</span>(revenue) <span class="kw">FOR</span> month_name <span class="kw">IN</span> (<span class="str">'Jan'</span>,<span class="str">'Feb'</span>,<span class="str">'Mar'</span>) )
+<span class="kw">ORDER BY</span> product_name;`,
+      pysparkSolution:
+`result = (
+    sales_long.groupBy(<span class="py-str">"product_name"</span>)
+    .pivot(<span class="py-str">"month_name"</span>, [<span class="py-str">"Jan"</span>, <span class="py-str">"Feb"</span>, <span class="py-str">"Mar"</span>])
+    .agg(F.sum(<span class="py-str">"revenue"</span>))
+    .orderBy(<span class="py-str">"product_name"</span>)
+)
+result.show()`
+    },
+    {
+      id: "unpivot-qoq",
+      difficulty: "hard",
+      tables: ["quarterly_revenue"],
+      title: "Unpivot Wide Quarters + Quarter-over-Quarter Change",
+      prompt: "Given revenue stored wide (one column per quarter), unpivot it back to long format <b>and</b> compute the quarter-over-quarter percentage change in the same result.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> quarterly_revenue (
+    product_name <span class="fn">VARCHAR</span>(20),
+    q1 <span class="fn">DECIMAL</span>(10,2), q2 <span class="fn">DECIMAL</span>(10,2),
+    q3 <span class="fn">DECIMAL</span>(10,2), q4 <span class="fn">DECIMAL</span>(10,2)
+);
+
+<span class="kw">INSERT INTO</span> quarterly_revenue <span class="kw">VALUES</span>
+(<span class="str">'Widget A'</span>,5000,5400,4800,6000),
+(<span class="str">'Widget B'</span>,3000,3100,3600,3400);`,
+      pysparkBoilerplate:
+`quarterly_revenue = spark.createDataFrame([
+    (<span class="py-str">"Widget A"</span>,5000,5400,4800,6000),
+    (<span class="py-str">"Widget B"</span>,3000,3100,3600,3400),
+], [<span class="py-str">"product_name"</span>, <span class="py-str">"q1"</span>, <span class="py-str">"q2"</span>, <span class="py-str">"q3"</span>, <span class="py-str">"q4"</span>])`,
+      inputTable: {cols:["product_name","q1","q2","q3","q4"], rows:[
+        ["Widget A","5000","5400","4800","6000"],["Widget B","3000","3100","3600","3400"]
+      ]},
+      outputTable: {cols:["product_name","quarter","revenue","qoq_pct_change"], rows:[
+        ["Widget A","Q1","5000","NULL"],["Widget A","Q2","5400","8.0"],["Widget A","Q3","4800","-11.11"],["Widget A","Q4","6000","25.0"],
+        ["Widget B","Q1","3000","NULL"],["Widget B","Q2","3100","3.33"],["Widget B","Q3","3600","16.13"],["Widget B","Q4","3400","-5.56"]
+      ]},
+      approach: "Two stages, and skipping stage 1 is the most common mistake: you cannot LAG() across quarter columns while they're still separate columns, so unpivot first. The portable unpivot is a UNION ALL, one branch per quarter column (Spark SQL also offers a native STACK() function). Only once quarter is a row value can LAG() OVER (PARTITION BY product_name ORDER BY quarter) reach 'the previous quarter's revenue' to compute percentage change.",
+      pyApproach: "Spark's F.expr(\"stack(4, ...)\") does the unpivot in one expression, turning 4 columns into (quarter, revenue) row pairs. Then it's the same LAG-based percent-change window as any other period-over-period calculation.",
+      solution:
+`<span class="kw">WITH</span> unpivoted <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> product_name, <span class="str">'Q1'</span> <span class="kw">AS</span> quarter, q1 <span class="kw">AS</span> revenue <span class="kw">FROM</span> quarterly_revenue
+    <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> product_name, <span class="str">'Q2'</span>, q2 <span class="kw">FROM</span> quarterly_revenue
+    <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> product_name, <span class="str">'Q3'</span>, q3 <span class="kw">FROM</span> quarterly_revenue
+    <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> product_name, <span class="str">'Q4'</span>, q4 <span class="kw">FROM</span> quarterly_revenue
+)
+<span class="kw">SELECT</span> product_name, quarter, revenue,
+    <span class="fn">ROUND</span>(100.0 * (revenue <span class="kw">-</span> LAG(revenue) OVER (PARTITION BY product_name ORDER BY quarter))
+          / LAG(revenue) OVER (PARTITION BY product_name ORDER BY quarter), 2) <span class="kw">AS</span> qoq_pct_change
+<span class="kw">FROM</span> unpivoted
+<span class="kw">ORDER BY</span> product_name, quarter;`,
+      pysparkSolution:
+`unpivoted = quarterly_revenue.select(
+    <span class="py-str">"product_name"</span>,
+    F.expr(<span class="py-str">"stack(4, 'Q1', q1, 'Q2', q2, 'Q3', q3, 'Q4', q4) as (quarter, revenue)"</span>)
+)
+
+w = Window.partitionBy(<span class="py-str">"product_name"</span>).orderBy(<span class="py-str">"quarter"</span>)
+result = unpivoted.withColumn(
+    <span class="py-str">"qoq_pct_change"</span>,
+    F.round(100.0 * (F.col(<span class="py-str">"revenue"</span>) - F.lag(<span class="py-str">"revenue"</span>).over(w)) / F.lag(<span class="py-str">"revenue"</span>).over(w), 2)
+)
+result.orderBy(<span class="py-str">"product_name"</span>, <span class="py-str">"quarter"</span>).show()`
+    }
+  ]
+},
+
+{
+  name: "Anti-Joins, Set Ops & Cohort Retention",
+  blurb: "NOT EXISTS / LEFT JOIN IS NULL for 'never did X', then the same idea scaled up into a retention matrix.",
+  questions: [
+    {
+      id: "customers-churned",
+      difficulty: "med",
+      tables: ["orders_by_month"],
+      title: "Customers Who Ordered in Jan but Not Feb",
+      prompt: "Find customers who placed an order in January but did <b>not</b> place any order in February.",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> orders_by_month (
+    customer_id <span class="fn">INT</span>,
+    order_month <span class="fn">VARCHAR</span>(7)
+);
+
+<span class="kw">INSERT INTO</span> orders_by_month <span class="kw">VALUES</span>
+(1,<span class="str">'2026-01'</span>),(1,<span class="str">'2026-02'</span>),
+(2,<span class="str">'2026-01'</span>),
+(3,<span class="str">'2026-01'</span>),(3,<span class="str">'2026-02'</span>),
+(4,<span class="str">'2026-02'</span>);`,
+      pysparkBoilerplate:
+`orders_by_month = spark.createDataFrame([
+    (1,<span class="py-str">"2026-01"</span>),(1,<span class="py-str">"2026-02"</span>),
+    (2,<span class="py-str">"2026-01"</span>),
+    (3,<span class="py-str">"2026-01"</span>),(3,<span class="py-str">"2026-02"</span>),
+    (4,<span class="py-str">"2026-02"</span>),
+], [<span class="py-str">"customer_id"</span>, <span class="py-str">"order_month"</span>])`,
+      inputTable: {cols:["customer_id","order_month"], rows:[
+        [1,"2026-01"],[1,"2026-02"],[2,"2026-01"],[3,"2026-01"],[3,"2026-02"],[4,"2026-02"]
+      ]},
+      outputTable: {cols:["customer_id"], rows:[
+        [2]
+      ]},
+      approach: "NOT EXISTS is generally the safest anti-join pattern (LEFT JOIN + WHERE right.key IS NULL works too, but it's easy to get subtly wrong if the join key can itself be NULL). Filter to Jan customers, then require no matching row for that same customer in Feb.",
+      pyApproach: "join(..., how='left_anti') is PySpark's dedicated anti-join — cleaner than emulating it with a left join and a null filter.",
+      solution:
+`<span class="kw">SELECT DISTINCT</span> jan.customer_id
+<span class="kw">FROM</span> orders_by_month jan
+<span class="kw">WHERE</span> jan.order_month = <span class="str">'2026-01'</span>
+  <span class="kw">AND NOT EXISTS</span> (
+      <span class="kw">SELECT</span> 1 <span class="kw">FROM</span> orders_by_month feb
+      <span class="kw">WHERE</span> feb.customer_id = jan.customer_id
+        <span class="kw">AND</span> feb.order_month = <span class="str">'2026-02'</span>
+  );`,
+      pysparkSolution:
+`jan = orders_by_month.filter(F.col(<span class="py-str">"order_month"</span>) == <span class="py-str">"2026-01"</span>)
+feb = orders_by_month.filter(F.col(<span class="py-str">"order_month"</span>) == <span class="py-str">"2026-02"</span>)
+
+result = jan.select(<span class="py-str">"customer_id"</span>).distinct().join(
+    feb.select(<span class="py-str">"customer_id"</span>).distinct(), on=<span class="py-str">"customer_id"</span>, how=<span class="py-str">"left_anti"</span>
+)
+result.show()`
+    },
+    {
+      id: "cohort-retention",
+      difficulty: "hard",
+      tables: ["users_signup","orders_activity"],
+      title: "Monthly Cohort Retention Matrix",
+      prompt: "For each signup cohort (by month), compute the % of that cohort still placing orders in each subsequent month since signup (month 0, month 1, month 2, ...).",
+      boilerplate:
+`<span class="kw">CREATE TABLE</span> users_signup (user_id <span class="fn">INT</span>, signup_month <span class="fn">VARCHAR</span>(7));
+<span class="kw">CREATE TABLE</span> orders_activity (user_id <span class="fn">INT</span>, order_month <span class="fn">VARCHAR</span>(7));
+
+<span class="kw">INSERT INTO</span> users_signup <span class="kw">VALUES</span>
+(1,<span class="str">'2026-01'</span>),(2,<span class="str">'2026-01'</span>),(3,<span class="str">'2026-01'</span>),
+(4,<span class="str">'2026-02'</span>),(5,<span class="str">'2026-02'</span>);
+
+<span class="kw">INSERT INTO</span> orders_activity <span class="kw">VALUES</span>
+(1,<span class="str">'2026-01'</span>),(1,<span class="str">'2026-02'</span>),(1,<span class="str">'2026-03'</span>),
+(2,<span class="str">'2026-01'</span>),
+(3,<span class="str">'2026-01'</span>),(3,<span class="str">'2026-03'</span>),
+(4,<span class="str">'2026-02'</span>),(4,<span class="str">'2026-03'</span>),
+(5,<span class="str">'2026-02'</span>);`,
+      pysparkBoilerplate:
+`users_signup = spark.createDataFrame([
+    (1,<span class="py-str">"2026-01"</span>),(2,<span class="py-str">"2026-01"</span>),(3,<span class="py-str">"2026-01"</span>),
+    (4,<span class="py-str">"2026-02"</span>),(5,<span class="py-str">"2026-02"</span>),
+], [<span class="py-str">"user_id"</span>, <span class="py-str">"signup_month"</span>])
+
+orders_activity = spark.createDataFrame([
+    (1,<span class="py-str">"2026-01"</span>),(1,<span class="py-str">"2026-02"</span>),(1,<span class="py-str">"2026-03"</span>),
+    (2,<span class="py-str">"2026-01"</span>),
+    (3,<span class="py-str">"2026-01"</span>),(3,<span class="py-str">"2026-03"</span>),
+    (4,<span class="py-str">"2026-02"</span>),(4,<span class="py-str">"2026-03"</span>),
+    (5,<span class="py-str">"2026-02"</span>),
+], [<span class="py-str">"user_id"</span>, <span class="py-str">"order_month"</span>])`,
+      inputTable: {cols:["user_id","signup_month"], rows:[
+        [1,"2026-01"],[2,"2026-01"],[3,"2026-01"],[4,"2026-02"],[5,"2026-02"]
+      ]},
+      outputTable: {cols:["cohort_month","months_since_signup","cohort_size","active_users","retention_pct"], rows:[
+        ["2026-01","0","3","3","100.0"],["2026-01","1","3","1","33.3"],["2026-01","2","3","2","66.7"],
+        ["2026-02","0","2","2","100.0"],["2026-02","1","2","1","50.0"]
+      ]},
+      approach: "Build this in three deliberate stages rather than one giant query. (1) cohort_size: COUNT DISTINCT user_id per signup_month from users_signup. (2) activity: join orders_activity to users_signup on user_id, compute months_since_signup via a month-difference between order_month and signup_month, then COUNT DISTINCT user_id per (cohort_month, months_since_signup). (3) join those two and divide. Keeping the stages as separate CTEs makes it easy to sanity-check cohort_size independently before trusting the retention percentages — a real interview win, since debugging a single monolithic query live is painful.",
+      pyApproach: "Same three-stage decomposition as CTEs: a cohort_size DataFrame, an activity DataFrame with months_since_signup computed via F.months_between, then a join and a percentage column. Keep them as separate named DataFrames rather than one long chain, for the same debuggability reason as the SQL version.",
+      solution:
+`<span class="kw">WITH</span> cohort_size <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> signup_month <span class="kw">AS</span> cohort_month, <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> user_id) <span class="kw">AS</span> cohort_size
+    <span class="kw">FROM</span> users_signup
+    <span class="kw">GROUP BY</span> signup_month
+),
+activity <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> u.signup_month <span class="kw">AS</span> cohort_month,
+           <span class="fn">CAST</span>(MONTHS_BETWEEN(
+               <span class="fn">TO_DATE</span>(o.order_month <span class="kw">||</span> <span class="str">'-01'</span>), <span class="fn">TO_DATE</span>(u.signup_month <span class="kw">||</span> <span class="str">'-01'</span>)
+           ) <span class="kw">AS</span> <span class="fn">INT</span>) <span class="kw">AS</span> months_since_signup,
+           o.user_id
+    <span class="kw">FROM</span> orders_activity o
+    <span class="kw">JOIN</span> users_signup u <span class="kw">ON</span> o.user_id = u.user_id
+),
+active_counts <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> cohort_month, months_since_signup, <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> user_id) <span class="kw">AS</span> active_users
+    <span class="kw">FROM</span> activity
+    <span class="kw">GROUP BY</span> cohort_month, months_since_signup
+)
+<span class="kw">SELECT</span> a.cohort_month, a.months_since_signup, c.cohort_size, a.active_users,
+       <span class="fn">ROUND</span>(100.0 * a.active_users / c.cohort_size, 1) <span class="kw">AS</span> retention_pct
+<span class="kw">FROM</span> active_counts a
+<span class="kw">JOIN</span> cohort_size c <span class="kw">ON</span> a.cohort_month = c.cohort_month
+<span class="kw">ORDER BY</span> a.cohort_month, a.months_since_signup;`,
+      pysparkSolution:
+`cohort_size = users_signup.groupBy(F.col(<span class="py-str">"signup_month"</span>).alias(<span class="py-str">"cohort_month"</span>)) \\
+    .agg(F.countDistinct(<span class="py-str">"user_id"</span>).alias(<span class="py-str">"cohort_size"</span>))
+
+joined = orders_activity.join(users_signup, <span class="py-str">"user_id"</span>)
+activity = joined.withColumn(
+    <span class="py-str">"months_since_signup"</span>,
+    F.months_between(
+        F.to_date(F.concat(F.col(<span class="py-str">"order_month"</span>), F.lit(<span class="py-str">"-01"</span>))),
+        F.to_date(F.concat(F.col(<span class="py-str">"signup_month"</span>), F.lit(<span class="py-str">"-01"</span>)))
+    ).cast(<span class="py-str">"int"</span>)
+)
+
+active_counts = (
+    activity.groupBy(F.col(<span class="py-str">"signup_month"</span>).alias(<span class="py-str">"cohort_month"</span>), <span class="py-str">"months_since_signup"</span>)
+    .agg(F.countDistinct(<span class="py-str">"user_id"</span>).alias(<span class="py-str">"active_users"</span>))
+)
+
+result = active_counts.join(cohort_size, <span class="py-str">"cohort_month"</span>).withColumn(
+    <span class="py-str">"retention_pct"</span>, F.round(100.0 * F.col(<span class="py-str">"active_users"</span>) / F.col(<span class="py-str">"cohort_size"</span>), 1)
+)
+result.orderBy(<span class="py-str">"cohort_month"</span>, <span class="py-str">"months_since_signup"</span>).show()`
+    }
+  ]
+}
+
+];
+
+function buildTable(t){
+  let html = '<div class="table-scroll"><table class="data"><thead><tr>';
+  t.cols.forEach(c => html += `<th>${c}</th>`);
+  html += '</tr></thead><tbody>';
+  t.rows.forEach(r => {
+    html += '<tr>';
+    r.forEach(v => html += `<td>${v}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+const stack = document.getElementById('stack');
+const indexTopics = document.getElementById('indexTopics');
+
+let qCounter = 0;
+topics.forEach((topic, ti) => {
+  const tnum = String(ti+1).padStart(2,'0');
+
+  const idxTopicEl = document.createElement('div');
+  idxTopicEl.className = 'index-topic';
+  const grid = document.createElement('div');
+  grid.className = 'index-grid';
+  idxTopicEl.innerHTML = `<div class="index-topic-name"><span class="tnum">${tnum}</span> ${topic.name}</div>`;
+  idxTopicEl.appendChild(grid);
+  indexTopics.appendChild(idxTopicEl);
+
+  const divider = document.createElement('div');
+  divider.className = 'topic-divider';
+  divider.id = `topic-${ti}`;
+  divider.innerHTML = `<h2><span class="tag">${tnum}</span> ${topic.name}</h2><div class="line"></div>`;
+  stack.appendChild(divider);
+
+  const blurbEl = document.createElement('p');
+  blurbEl.className = 'topic-blurb';
+  blurbEl.textContent = topic.blurb;
+  stack.appendChild(blurbEl);
+
+  topic.questions.forEach((q) => {
+    qCounter++;
+    const num = String(qCounter).padStart(2,'0');
+
+    const idxEl = document.createElement('a');
+    idxEl.href = `#${q.id}`;
+    idxEl.className = 'index-item';
+    idxEl.innerHTML = `<span class="n">${num}</span> ${q.title}`;
+    grid.appendChild(idxEl);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = q.id;
+    card.innerHTML = `
+      <div class="card-head">
+        <div class="card-head-top">
+          <span class="qnum">Q${num}</span>
+          <span class="difficulty ${q.difficulty}">${q.difficulty === 'hard' ? 'Hard' : 'Medium'}</span>
+          <span class="tables-used">${q.tables.map(t => `<span class="table-tag">${t}</span>`).join('')}</span>
+        </div>
+        <h3 class="card-title">${q.title}</h3>
+        <p class="card-prompt">${q.prompt}</p>
+      </div>
+      <div class="card-body">
+        <div class="lang-tabs" data-qid="${q.id}">
+          <div class="lang-tab active" data-lang="sql"><span class="sw"></span>SQL</div>
+          <div class="lang-tab" data-lang="pyspark"><span class="sw"></span>PySpark</div>
+        </div>
+
+        <div class="lang-pane active" data-lang="sql" data-qid="${q.id}">
+          <div class="section-label">Boilerplate — schema &amp; sample data</div>
+          <pre><code>${q.boilerplate}</code></pre>
+        </div>
+        <div class="lang-pane" data-lang="pyspark" data-qid="${q.id}">
+          <div class="section-label">Boilerplate — DataFrame setup</div>
+          <pre><code>${q.pysparkBoilerplate}</code></pre>
+        </div>
+
+        <div class="section-label">Input / Expected Output</div>
+        <div class="io-pair">
+          <div class="io-block"><h4>Input</h4>${buildTable(q.inputTable)}</div>
+          <div class="io-block"><h4>Expected Output</h4>${buildTable(q.outputTable)}</div>
+        </div>
+
+        <div class="lang-pane active" data-lang="sql" data-qid="${q.id}">
+          <details class="solution">
+            <summary><span class="prompt-txt">--</span> <span class="exec">Reveal SQL solution</span> <span class="prompt-txt">(try it yourself first)</span></summary>
+            <div class="solution-inner">
+              <p class="approach"><b>Approach:</b> ${q.approach}</p>
+              <pre><code>${q.solution}</code></pre>
+            </div>
+          </details>
+        </div>
+        <div class="lang-pane" data-lang="pyspark" data-qid="${q.id}">
+          <details class="solution">
+            <summary><span class="prompt-txt">#</span> <span class="exec">Reveal PySpark solution</span> <span class="prompt-txt">(try it yourself first)</span></summary>
+            <div class="solution-inner">
+              <p class="approach py"><b>Approach:</b> ${q.pyApproach}</p>
+              <pre><code>${q.pysparkSolution}</code></pre>
+            </div>
+          </details>
+        </div>
+      </div>
+    `;
+    stack.appendChild(card);
+  });
+});
+
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('.lang-tab');
+  if (!tab) return;
+  const wrap = tab.closest('.lang-tabs');
+  const qid = wrap.getAttribute('data-qid');
+  const lang = tab.getAttribute('data-lang');
+
+  wrap.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t === tab));
+
+  document.querySelectorAll(`.lang-pane[data-qid="${qid}"]`).forEach(pane => {
+    pane.classList.toggle('active', pane.getAttribute('data-lang') === lang);
+  });
+});
+</script>
+</body>
+</html>

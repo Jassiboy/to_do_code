@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PySpark Interview Console — FAANG Data Engineering Rounds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10141B;
+    --bg-panel: #171D26;
+    --bg-panel-raised: #1D2530;
+    --line: #2A3341;
+    --line-soft: #212933;
+    --text: #E8ECF1;
+    --text-muted: #8B96A5;
+    --text-dim: #5C6675;
+    --amber: #F2B84B;
+    --amber-dim: #7A6534;
+    --teal: #5FD4C7;
+    --teal-dim: #2B5A54;
+    --rose: #E8836F;
+    --violet: #B79CF2;
+    --violet-dim: #4A3E6B;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --display: 'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -5%, rgba(183,156,242,0.08), transparent),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(95,212,199,0.06), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+    border-bottom:1px solid var(--line);
+    padding:14px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    background:rgba(16,20,27,0.9);
+    backdrop-filter:blur(10px);
+    z-index:50;
+  }
+  .topbar-left{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--text-dim);}
+  .dot-row{display:flex;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;}
+  .dot.r{background:#E8836F;} .dot.y{background:#F2B84B;} .dot.g{background:#5FD4C7;}
+  .topbar-right{font-family:var(--mono);font-size:12px;color:var(--text-dim);}
+  .topbar-right span{color:var(--violet);}
+  .hero{max-width:960px;margin:0 auto;padding:64px 28px 40px;}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:0.12em;color:var(--violet);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .eyebrow::before{content:'❯';color:var(--amber);font-weight:700;}
+  h1{font-family:var(--display);font-size:42px;line-height:1.12;margin:0 0 16px;font-weight:700;letter-spacing:-0.01em;}
+  h1 .hl{color:var(--amber);} h1 .hl2{color:var(--violet);}
+  .lede{color:var(--text-muted);font-size:16.5px;max-width:680px;margin:0 0 30px;}
+  .lede b{color:var(--text);font-weight:600;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:12px;}
+  .chip{border:1px solid var(--line);background:var(--bg-panel);color:var(--text-muted);padding:6px 12px;border-radius:20px;}
+  .chip b{color:var(--text);}
+  .index-wrap{max-width:960px;margin:0 auto;padding:0 28px 50px;}
+  .index-title{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;}
+  .index-topic{margin-bottom:22px;}
+  .index-topic-name{font-family:var(--display);font-size:15px;font-weight:600;color:var(--violet);margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+  .index-topic-name .tnum{font-family:var(--mono);font-size:11px;color:var(--bg);background:var(--violet);padding:1px 7px;border-radius:4px;}
+  .index-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:8px;}
+  .index-item{border:1px solid var(--line-soft);border-radius:8px;padding:10px 14px;text-decoration:none;color:var(--text-muted);font-size:13.5px;display:flex;gap:10px;align-items:baseline;transition:border-color .15s, color .15s, background .15s;}
+  .index-item:hover{border-color:var(--violet-dim);color:var(--text);background:var(--bg-panel);}
+  .index-item .n{font-family:var(--mono);color:var(--amber);font-size:12px;}
+  .stack{max-width:960px;margin:0 auto;padding:0 28px 100px;display:flex;flex-direction:column;gap:22px;}
+  .topic-divider{display:flex;align-items:center;gap:14px;margin:18px 0 -2px;scroll-margin-top:80px;}
+  .topic-divider .line{flex:1;height:1px;background:var(--line);}
+  .topic-divider h2{font-family:var(--display);font-size:19px;font-weight:600;color:var(--text);margin:0;white-space:nowrap;display:flex;align-items:center;gap:10px;}
+  .topic-divider .tag{font-family:var(--mono);font-size:11px;color:var(--bg);background:var(--violet);padding:2px 9px;border-radius:20px;}
+  .topic-blurb{color:var(--text-dim);font-size:13px;margin:-14px 0 0;max-width:700px;}
+  .card{border:1px solid var(--line);border-radius:10px;background:var(--bg-panel);overflow:hidden;scroll-margin-top:80px;}
+  .card-head{padding:20px 24px 16px;border-bottom:1px solid var(--line-soft);}
+  .card-head-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+  .qnum{font-family:var(--mono);font-size:12px;color:var(--bg);background:var(--amber);padding:2px 8px;border-radius:4px;font-weight:700;}
+  .difficulty{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;padding:2px 9px;border-radius:20px;border:1px solid;text-transform:uppercase;}
+  .difficulty.med{color:var(--amber);border-color:var(--amber-dim);}
+  .difficulty.hard{color:var(--rose);border-color:#5E3A32;}
+  .faang{font-family:var(--mono);font-size:10.5px;letter-spacing:0.04em;color:var(--violet);border:1px solid var(--violet-dim);padding:2px 9px;border-radius:20px;text-transform:uppercase;}
+  .tables-used{margin-left:auto;display:flex;gap:6px;font-family:var(--mono);font-size:11px;}
+  .table-tag{background:var(--bg-panel-raised);border:1px solid var(--line-soft);color:var(--teal);padding:2px 8px;border-radius:4px;}
+  .card-title{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 8px;}
+  .card-prompt{color:var(--text-muted);font-size:14.5px;margin:0;}
+  .card-prompt code{font-family:var(--mono);background:var(--bg-panel-raised);padding:1px 6px;border-radius:4px;font-size:13px;color:var(--teal);}
+  .card-body{padding:20px 24px 24px;}
+  .section-label{font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+  .section-label:first-child{margin-top:0;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--line-soft);}
+  pre{margin:0;background:#0C0F14;border:1px solid var(--line-soft);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.6px;line-height:1.55;}
+  code{font-family:var(--mono);}
+  .py-kw{color:#F2B84B;} .py-fn{color:#5FD4C7;} .py-str{color:#A8D97A;} .py-com{color:var(--text-dim);font-style:italic;} .py-cls{color:#E8836F;} .py-num{color:#B79CF2;}
+  table.data{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px;}
+  table.data th{text-align:left;background:var(--bg-panel-raised);color:var(--amber);padding:7px 12px;border:1px solid var(--line-soft);font-weight:600;}
+  table.data td{padding:6px 12px;border:1px solid var(--line-soft);color:var(--text-muted);}
+  .table-scroll{overflow-x:auto;border-radius:8px;}
+  .io-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:720px){.io-pair{grid-template-columns:1fr;}}
+  .io-block h4{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em;}
+  details.solution{margin-top:20px;border:1px dashed var(--line);border-radius:8px;background:linear-gradient(180deg, rgba(183,156,242,0.04), transparent);}
+  details.solution summary{list-style:none;cursor:pointer;padding:13px 18px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--violet);user-select:none;}
+  details.solution summary::-webkit-details-marker{display:none;}
+  details.solution summary::before{content:'▶';font-size:10px;color:var(--text-dim);transition:transform .18s ease;}
+  details.solution[open] summary::before{transform:rotate(90deg);}
+  details.solution summary .prompt-txt{color:var(--text-dim);}
+  details.solution summary .exec{color:var(--amber);}
+  details.solution[open] summary{border-bottom:1px solid var(--line-soft);}
+  .solution-inner{padding:16px 18px 20px;}
+  .approach{color:var(--text-muted);font-size:13.5px;margin:0 0 14px;padding:10px 14px;background:var(--bg-panel-raised);border-left:2px solid var(--violet);border-radius:0 6px 6px 0;}
+  .gotcha{color:var(--text-muted);font-size:13px;margin:14px 0 0;padding:10px 14px;background:rgba(232,131,111,0.06);border-left:2px solid var(--rose);border-radius:0 6px 6px 0;}
+  .gotcha b{color:var(--rose);}
+  footer{max-width:960px;margin:0 auto;padding:0 28px 60px;font-family:var(--mono);font-size:12px;color:var(--text-dim);border-top:1px solid var(--line-soft);padding-top:24px;}
+  footer .blink{color:var(--violet);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="dot-row"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+    pyspark_faang_prep.py
+  </div>
+  <div class="topbar-right">runtime: <span>PySpark 3.x DataFrame API</span></div>
+</div>
+
+<div class="hero">
+  <div class="eyebrow">practice set · pyspark-specific · faang loop</div>
+  <h1>PySpark-only patterns that <span class="hl2">generic SQL prep</span> won't cover</h1>
+  <p class="lede">
+    These are the questions that show up once an interview moves past "can you write a JOIN"
+    into "do you actually know the DataFrame API" — forward/backward fill without a loop, nested
+    JSON flattening, array manipulation <b>without exploding</b> (a common performance follow-up),
+    MapType/struct wrangling, dynamic schema-driven column logic, and the skew/broadcast questions
+    that separate a mid-level answer from a senior one.
+  </p>
+  <div class="meta-row">
+    <div class="chip"><b>6</b> topics</div>
+    <div class="chip"><b>12</b> questions</div>
+    <div class="chip"><b>Concept + Complex</b> per topic</div>
+    <div class="chip"><b>PySpark 3.x</b> DataFrame API</div>
+  </div>
+</div>
+
+<div class="index-wrap">
+  <div class="index-title">Jump to a topic / question</div>
+  <div id="indexTopics"></div>
+</div>
+
+<div class="stack" id="stack"></div>
+
+<footer>
+  <span class="blink">$</span> tip — for every array/JSON question here, an interviewer may immediately ask "how would you do this without exploding, for a 10B row table?" Have that answer ready before they ask it.
+</footer>
+
+<script>
+const topics = [
+
+{
+  name: "Forward Fill & Backward Fill",
+  blurb: "No native ffill()/bfill() in Spark — both are built from last()/first() with ignorenulls over an ordered window.",
+  questions: [
+    {
+      id: "ffill-basic",
+      difficulty: "med",
+      tables: ["sensor_readings"],
+      title: "Forward-Fill Missing Sensor Readings",
+      prompt: "Each sensor reports a value every hour, but some readings are missing (<code>NULL</code>). Forward-fill each missing reading with the most recent non-null value for that sensor.",
+      faang: "asked at: Amazon, Meta",
+      boilerplate:
+`sensor_readings = spark.createDataFrame([
+    (<span class="py-str">"S1"</span>, 1, 100), (<span class="py-str">"S1"</span>, 2, <span class="py-kw">None</span>), (<span class="py-str">"S1"</span>, 3, <span class="py-kw">None</span>),
+    (<span class="py-str">"S1"</span>, 4, 103),  (<span class="py-str">"S1"</span>, 5, <span class="py-kw">None</span>), (<span class="py-str">"S1"</span>, 6, 105),
+], [<span class="py-str">"sensor_id"</span>, <span class="py-str">"hour"</span>, <span class="py-str">"value"</span>])`,
+      inputTable: {cols:["sensor_id","hour","value"], rows:[
+        ["S1","1","100"],["S1","2","NULL"],["S1","3","NULL"],["S1","4","103"],["S1","5","NULL"],["S1","6","105"]
+      ]},
+      outputTable: {cols:["sensor_id","hour","value_ffilled"], rows:[
+        ["S1","1","100"],["S1","2","100"],["S1","3","100"],["S1","4","103"],["S1","5","103"],["S1","6","105"]
+      ]},
+      approach: "F.last('value', ignorenulls=True) over a window that only looks backward — PARTITION BY sensor_id ORDER BY hour, rowsBetween(Window.unboundedPreceding, Window.currentRow). The key detail interviewers listen for: last() normally returns the value at the current row, which would just be NULL again — ignorenulls=True is what makes it skip past nulls to find the true last non-null value in the frame.",
+      solution:
+`<span class="py-kw">from</span> pyspark.sql <span class="py-kw">import</span> functions <span class="py-kw">as</span> F
+<span class="py-kw">from</span> pyspark.sql.window <span class="py-kw">import</span> Window
+
+w = (
+    Window.partitionBy(<span class="py-str">"sensor_id"</span>)
+    .orderBy(<span class="py-str">"hour"</span>)
+    .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+)
+
+result = sensor_readings.withColumn(
+    <span class="py-str">"value_ffilled"</span>,
+    F.last(<span class="py-str">"value"</span>, ignorenulls=<span class="py-kw">True</span>).over(w)
+)
+result.orderBy(<span class="py-str">"sensor_id"</span>, <span class="py-str">"hour"</span>).show()`,
+      gotcha: "Without ignorenulls=True, last() over this frame just returns the current row's own value — including NULL — because 'last' means 'last row in the frame', not 'last non-null row'. It's an easy default to forget under interview pressure."
+    },
+    {
+      id: "ffill-bfill-leading-nulls",
+      difficulty: "hard",
+      tables: ["stock_prices"],
+      title: "Combine Forward-Fill + Backward-Fill for Leading Nulls",
+      prompt: "Forward-fill missing prices per symbol. But forward-fill can't fix <b>leading</b> nulls (no prior value exists yet) — for those, backward-fill from the next available price instead.",
+      faang: "asked at: Google, Bloomberg",
+      boilerplate:
+`stock_prices = spark.createDataFrame([
+    (<span class="py-str">"AAPL"</span>, 1, <span class="py-kw">None</span>), (<span class="py-str">"AAPL"</span>, 2, <span class="py-kw">None</span>), (<span class="py-str">"AAPL"</span>, 3, 100),
+    (<span class="py-str">"AAPL"</span>, 4, <span class="py-kw">None</span>), (<span class="py-str">"AAPL"</span>, 5, 105), (<span class="py-str">"AAPL"</span>, 6, <span class="py-kw">None</span>),
+], [<span class="py-str">"symbol"</span>, <span class="py-str">"day"</span>, <span class="py-str">"price"</span>])`,
+      inputTable: {cols:["symbol","day","price"], rows:[
+        ["AAPL","1","NULL"],["AAPL","2","NULL"],["AAPL","3","100"],["AAPL","4","NULL"],["AAPL","5","105"],["AAPL","6","NULL"]
+      ]},
+      outputTable: {cols:["symbol","day","price_final"], rows:[
+        ["AAPL","1","100"],["AAPL","2","100"],["AAPL","3","100"],["AAPL","4","100"],["AAPL","5","105"],["AAPL","6","105"]
+      ]},
+      approach: "Compute both directions as separate columns, then COALESCE them with ffill given priority. ffill uses the backward-looking frame (unboundedPreceding → currentRow) from the previous question; bfill is the mirror image — F.first('price', ignorenulls=True) over a forward-looking frame (currentRow → unboundedFollowing). coalesce(ffill_col, bfill_col) then lets ffill win wherever it has a real value, and only falls through to bfill for the leading-null rows where ffill legitimately has nothing to carry forward.",
+      solution:
+`w_fwd = (
+    Window.partitionBy(<span class="py-str">"symbol"</span>).orderBy(<span class="py-str">"day"</span>)
+    .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+)
+w_back = (
+    Window.partitionBy(<span class="py-str">"symbol"</span>).orderBy(<span class="py-str">"day"</span>)
+    .rowsBetween(Window.currentRow, Window.unboundedFollowing)
+)
+
+filled = (
+    stock_prices
+    .withColumn(<span class="py-str">"ffill"</span>, F.last(<span class="py-str">"price"</span>, ignorenulls=<span class="py-kw">True</span>).over(w_fwd))
+    .withColumn(<span class="py-str">"bfill"</span>, F.first(<span class="py-str">"price"</span>, ignorenulls=<span class="py-kw">True</span>).over(w_back))
+    .withColumn(<span class="py-str">"price_final"</span>, F.coalesce(F.col(<span class="py-str">"ffill"</span>), F.col(<span class="py-str">"bfill"</span>)))
+)
+result = filled.select(<span class="py-str">"symbol"</span>, <span class="py-str">"day"</span>, <span class="py-str">"price_final"</span>)
+result.orderBy(<span class="py-str">"symbol"</span>, <span class="py-str">"day"</span>).show()`,
+      gotcha: "If a whole group has no non-null values at all, both ffill and bfill come back NULL for every row — coalesce won't manufacture data that was never there. Worth saying out loud in the interview: this handles 'gaps between known values', not 'groups with zero known values'."
+    }
+  ]
+},
+
+{
+  name: "JSON Handling",
+  blurb: "from_json/to_json with explicit schemas, nested struct flattening, and arrays embedded inside JSON strings.",
+  questions: [
+    {
+      id: "json-parse-flatten",
+      difficulty: "med",
+      tables: ["raw_events"],
+      title: "Parse & Flatten a Nested JSON String Column",
+      prompt: "<code>raw_events.payload</code> is a JSON string like <code>{\"user\":{\"id\":1,\"name\":\"Alice\"},\"action\":\"click\"}</code>. Parse it into real columns, including the nested <code>user</code> fields.",
+      faang: "asked at: Meta, Netflix",
+      boilerplate:
+`<span class="py-kw">from</span> pyspark.sql.types <span class="py-kw">import</span> StructType, StructField, StringType, IntegerType
+
+raw_events = spark.createDataFrame([
+    (1, <span class="py-str">'{"user": {"id": 1, "name": "Alice"}, "action": "click"}'</span>),
+    (2, <span class="py-str">'{"user": {"id": 2, "name": "Bob"}, "action": "purchase"}'</span>),
+], [<span class="py-str">"event_id"</span>, <span class="py-str">"payload"</span>])`,
+      inputTable: {cols:["event_id","payload"], rows:[
+        [1,'{"user":{"id":1,"name":"Alice"},"action":"click"}'],
+        [2,'{"user":{"id":2,"name":"Bob"},"action":"purchase"}']
+      ]},
+      outputTable: {cols:["event_id","user_id","user_name","action"], rows:[
+        [1,"1","Alice","click"],[2,"2","Bob","purchase"]
+      ]},
+      approach: "from_json() needs an explicit target schema — Spark won't infer one from a string column the way it can from a JSON file source. Define a StructType matching the shape (nested StructType for the 'user' field), call from_json() to turn the string into a genuine struct column, then reference nested fields with plain dot notation (parsed.user.id). Drop the intermediate struct column at the end for a flat result.",
+      solution:
+`schema = StructType([
+    StructField(<span class="py-str">"user"</span>, StructType([
+        StructField(<span class="py-str">"id"</span>, IntegerType()),
+        StructField(<span class="py-str">"name"</span>, StringType()),
+    ])),
+    StructField(<span class="py-str">"action"</span>, StringType()),
+])
+
+parsed = raw_events.withColumn(<span class="py-str">"parsed"</span>, F.from_json(<span class="py-str">"payload"</span>, schema))
+
+result = parsed.select(
+    <span class="py-str">"event_id"</span>,
+    F.col(<span class="py-str">"parsed.user.id"</span>).alias(<span class="py-str">"user_id"</span>),
+    F.col(<span class="py-str">"parsed.user.name"</span>).alias(<span class="py-str">"user_name"</span>),
+    F.col(<span class="py-str">"parsed.action"</span>).alias(<span class="py-str">"action"</span>),
+)
+result.show()`,
+      gotcha: "If a row's JSON string doesn't match the schema (extra field, wrong type, malformed JSON), from_json() silently returns NULL for that row rather than throwing — worth flagging as a data-quality risk, and worth knowing about the columnNameOfCorruptRecord option if the interviewer pushes on it."
+    },
+    {
+      id: "json-array-explode-resummarize",
+      difficulty: "hard",
+      tables: ["orders_json"],
+      title: "Explode a JSON Array Field, Then Re-Serialize a Summary",
+      prompt: "<code>orders_json.payload</code> contains a nested array of line items. Parse it, explode the items to compute an order total, then attach a fresh JSON summary column back onto each order via <code>to_json</code>.",
+      faang: "asked at: Amazon, Uber",
+      boilerplate:
+`<span class="py-kw">from</span> pyspark.sql.types <span class="py-kw">import</span> StructType, StructField, StringType, IntegerType, ArrayType
+
+orders_json = spark.createDataFrame([
+    (1, <span class="py-str">'{"customer_id": 100, "items": [{"sku":"A1","qty":2,"price":10}, {"sku":"B2","qty":1,"price":25}]}'</span>),
+    (2, <span class="py-str">'{"customer_id": 101, "items": [{"sku":"C3","qty":3,"price":5}]}'</span>),
+], [<span class="py-str">"order_id"</span>, <span class="py-str">"payload"</span>])`,
+      inputTable: {cols:["order_id","payload"], rows:[
+        [1,'{"customer_id":100,"items":[{"sku":"A1","qty":2,"price":10},{"sku":"B2","qty":1,"price":25}]}'],
+        [2,'{"customer_id":101,"items":[{"sku":"C3","qty":3,"price":5}]}']
+      ]},
+      outputTable: {cols:["order_id","customer_id","order_total","summary_json"], rows:[
+        [1,"100","45","{\"order_id\":1,\"total\":45}"],
+        [2,"101","15","{\"order_id\":2,\"total\":15}"]
+      ]},
+      approach: "Three stages. (1) from_json with a schema where 'items' is ArrayType(StructType(...)) — the array nests inside the struct schema definition itself. (2) explode() the items array to get one row per line item, multiply qty*price, and aggregate back with groupBy(order_id) to get order_total — this temporarily un-nests the data to compute across it. (3) to_json(struct(...)) builds a brand-new JSON string column from scratch out of plain columns, which is the reverse operation from stage 1 and commonly gets confused with it in interviews.",
+      solution:
+`item_schema = StructType([
+    StructField(<span class="py-str">"sku"</span>, StringType()),
+    StructField(<span class="py-str">"qty"</span>, IntegerType()),
+    StructField(<span class="py-str">"price"</span>, IntegerType()),
+])
+order_schema = StructType([
+    StructField(<span class="py-str">"customer_id"</span>, IntegerType()),
+    StructField(<span class="py-str">"items"</span>, ArrayType(item_schema)),
+])
+
+parsed = orders_json.withColumn(<span class="py-str">"parsed"</span>, F.from_json(<span class="py-str">"payload"</span>, order_schema))
+
+exploded = parsed.select(
+    <span class="py-str">"order_id"</span>, F.col(<span class="py-str">"parsed.customer_id"</span>).alias(<span class="py-str">"customer_id"</span>),
+    F.explode(<span class="py-str">"parsed.items"</span>).alias(<span class="py-str">"item"</span>)
+)
+
+totals = (
+    exploded.withColumn(<span class="py-str">"line_total"</span>, F.col(<span class="py-str">"item.qty"</span>) * F.col(<span class="py-str">"item.price"</span>))
+    .groupBy(<span class="py-str">"order_id"</span>, <span class="py-str">"customer_id"</span>)
+    .agg(F.sum(<span class="py-str">"line_total"</span>).alias(<span class="py-str">"order_total"</span>))
+)
+
+result = totals.withColumn(
+    <span class="py-str">"summary_json"</span>,
+    F.to_json(F.struct(F.col(<span class="py-str">"order_id"</span>), F.col(<span class="py-str">"order_total"</span>).alias(<span class="py-str">"total"</span>)))
+)
+result.show(truncate=<span class="py-kw">False</span>)`,
+      gotcha: "Building the ArrayType(StructType(...)) schema is the part people fumble live — it's easy to accidentally write StructType([item_schema]) (a struct containing one field per item) instead of ArrayType(item_schema) (a variable-length list of structs). Say the type out loud before typing it."
+    }
+  ]
+},
+
+{
+  name: "Array & Higher-Order Functions",
+  blurb: "explode() is the beginner move. transform/filter/aggregate operate on the array in place — the answer interviewers actually want at scale.",
+  questions: [
+    {
+      id: "array-explode-basic",
+      difficulty: "med",
+      tables: ["user_skills"],
+      title: "Explode an Array Column, With Position",
+      prompt: "<code>user_skills.skills</code> is an array of strings. Flatten it to one row per skill, keeping the skill's original position in the array, and keep only rows where the array actually contained <code>'python'</code>.",
+      faang: "asked at: Meta, LinkedIn",
+      boilerplate:
+`user_skills = spark.createDataFrame([
+    (1, [<span class="py-str">"python"</span>, <span class="py-str">"sql"</span>, <span class="py-str">"spark"</span>]),
+    (2, [<span class="py-str">"java"</span>, <span class="py-str">"scala"</span>]),
+    (3, [<span class="py-str">"sql"</span>, <span class="py-str">"python"</span>]),
+], [<span class="py-str">"user_id"</span>, <span class="py-str">"skills"</span>])`,
+      inputTable: {cols:["user_id","skills"], rows:[
+        [1,"[python, sql, spark]"],[2,"[java, scala]"],[3,"[sql, python]"]
+      ]},
+      outputTable: {cols:["user_id","position","skill"], rows:[
+        [1,"0","python"],[1,"1","sql"],[1,"2","spark"],[3,"0","sql"],[3,"1","python"]
+      ]},
+      approach: "array_contains() filters at the array level before any exploding happens, which is cheaper than exploding everyone and filtering after. posexplode() (not plain explode()) is what returns the index alongside the value — reach for it whenever order within the array matters for the output.",
+      solution:
+`filtered = user_skills.filter(F.array_contains(<span class="py-str">"skills"</span>, <span class="py-str">"python"</span>))
+
+result = filtered.select(
+    <span class="py-str">"user_id"</span>,
+    F.posexplode(<span class="py-str">"skills"</span>).alias(<span class="py-str">"position"</span>, <span class="py-str">"skill"</span>)
+)
+result.orderBy(<span class="py-str">"user_id"</span>, <span class="py-str">"position"</span>).show()`,
+      gotcha: "explode() (and posexplode()) drop rows whose array is NULL or empty entirely — use explode_outer()/posexplode_outer() if those rows need to survive as a single row with null skill values."
+    },
+    {
+      id: "array-higher-order-no-explode",
+      difficulty: "hard",
+      tables: ["user_scores"],
+      title: "Filter & Aggregate an Array — Without Exploding",
+      prompt: "<code>user_scores.scores</code> holds a user's last 10 quiz scores as <code>array&lt;int&gt;</code>. For each user, apply a +5 bonus to every score, keep only bonus-adjusted scores &gt;= 80, and sum what's left — <b>without ever calling explode()</b>.",
+      faang: "asked at: Amazon, Google (explicit follow-up: 'now do it without exploding')",
+      boilerplate:
+`user_scores = spark.createDataFrame([
+    (1, [70, 82, 90, 65, 88]),
+    (2, [95, 60, 78, 100]),
+], [<span class="py-str">"user_id"</span>, <span class="py-str">"scores"</span>])`,
+      inputTable: {cols:["user_id","scores"], rows:[
+        [1,"[70, 82, 90, 65, 88]"],[2,"[95, 60, 78, 100]"]
+      ]},
+      outputTable: {cols:["user_id","qualifying_total"], rows:[
+        [1,"260"],[2,"273"]
+      ]},
+      approach: "This is the interview signal for 'do you know Spark 3's higher-order array functions, or only explode()'. F.transform() maps a lambda across every array element and returns a same-shaped array (here: x + 5) — Spark's array-native equivalent of Python's map(). F.filter() (the array function, not DataFrame.filter — same name, different object) keeps only elements matching a predicate, returning a shorter array. F.aggregate() folds an array down to a single value with an accumulator, matching SQL's own AGGREGATE() higher-order function. Chaining all three means the row count never changes and nothing shuffles — a real win over explode+groupBy on a huge table.",
+      solution:
+`bonused = user_scores.withColumn(
+    <span class="py-str">"bonused"</span>, F.transform(<span class="py-str">"scores"</span>, <span class="py-kw">lambda</span> x: x + 5)
+)
+
+qualifying = bonused.withColumn(
+    <span class="py-str">"qualifying"</span>, F.filter(<span class="py-str">"bonused"</span>, <span class="py-kw">lambda</span> x: x >= 80)
+)
+
+result = qualifying.withColumn(
+    <span class="py-str">"qualifying_total"</span>,
+    F.aggregate(<span class="py-str">"qualifying"</span>, F.lit(0), <span class="py-kw">lambda</span> acc, x: acc + x)
+).select(<span class="py-str">"user_id"</span>, <span class="py-str">"qualifying_total"</span>)
+result.show()`,
+      gotcha: "F.filter (the higher-order array function imported from pyspark.sql.functions) will silently shadow the built-in filter() if you ever do `from pyspark.sql.functions import *` — a real bug source. Import functions as F and always call F.filter for the array version to keep the two unambiguous."
+    }
+  ]
+},
+
+{
+  name: "MapType & Struct Columns",
+  blurb: "Key-value pairs as a first-class column type — building, exploding, and merging maps.",
+  questions: [
+    {
+      id: "map-explode-basic",
+      difficulty: "med",
+      tables: ["product_attributes"],
+      title: "Explode a MapType Column Into Key-Value Rows",
+      prompt: "<code>product_attributes.attrs</code> is a <code>map&lt;string,string&gt;</code> of arbitrary product attributes. Flatten it to one row per (product, attribute key, attribute value), and separately pull out just the <code>'color'</code> value as its own column.",
+      faang: "asked at: Amazon, Walmart Labs",
+      boilerplate:
+`product_attributes = spark.createDataFrame([
+    (1, {<span class="py-str">"color"</span>: <span class="py-str">"red"</span>, <span class="py-str">"size"</span>: <span class="py-str">"M"</span>}),
+    (2, {<span class="py-str">"color"</span>: <span class="py-str">"blue"</span>, <span class="py-str">"material"</span>: <span class="py-str">"cotton"</span>}),
+], [<span class="py-str">"product_id"</span>, <span class="py-str">"attrs"</span>])`,
+      inputTable: {cols:["product_id","attrs"], rows:[
+        [1,"{color: red, size: M}"],[2,"{color: blue, material: cotton}"]
+      ]},
+      outputTable: {cols:["product_id","attr_key","attr_value"], rows:[
+        [1,"color","red"],[1,"size","M"],[2,"color","blue"],[2,"material","cotton"]
+      ]},
+      approach: "explode() works directly on MapType columns too, not just arrays — it just returns two output columns (key, value) instead of one. element_at(map_col, 'color') pulls a single known key out without exploding anything, which is the right tool when you only need one field rather than the full flattened set.",
+      solution:
+`exploded = product_attributes.select(
+    <span class="py-str">"product_id"</span>,
+    F.explode(<span class="py-str">"attrs"</span>).alias(<span class="py-str">"attr_key"</span>, <span class="py-str">"attr_value"</span>)
+)
+exploded.orderBy(<span class="py-str">"product_id"</span>).show()
+
+<span class="py-com"># Pulling a single known key without exploding:</span>
+with_color = product_attributes.withColumn(<span class="py-str">"color"</span>, F.element_at(<span class="py-str">"attrs"</span>, <span class="py-str">"color"</span>))
+with_color.select(<span class="py-str">"product_id"</span>, <span class="py-str">"color"</span>).show()`,
+      gotcha: "element_at() on a missing key returns NULL (Spark 3.x default), not an error — don't assume a downstream isNotNull() check is unnecessary just because the schema declares the map type."
+    },
+    {
+      id: "map-merge-override",
+      difficulty: "hard",
+      tables: ["config_rows"],
+      title: "Merge Two MapType Columns With Override Precedence",
+      prompt: "Each row has a <code>base_config</code> map and an <code>override_config</code> map. Produce a single <code>merged_config</code> map where override wins on any key present in both.",
+      faang: "asked at: Meta, Airbnb (config-service style question)",
+      boilerplate:
+`config_rows = spark.createDataFrame([
+    (1, {<span class="py-str">"timeout"</span>: <span class="py-str">"30"</span>, <span class="py-str">"retries"</span>: <span class="py-str">"3"</span>}, {<span class="py-str">"timeout"</span>: <span class="py-str">"60"</span>}),
+    (2, {<span class="py-str">"timeout"</span>: <span class="py-str">"30"</span>}, {}),
+], [<span class="py-str">"service_id"</span>, <span class="py-str">"base_config"</span>, <span class="py-str">"override_config"</span>])`,
+      inputTable: {cols:["service_id","base_config","override_config"], rows:[
+        [1,"{timeout: 30, retries: 3}","{timeout: 60}"],[2,"{timeout: 30}","{}"]
+      ]},
+      outputTable: {cols:["service_id","merged_config"], rows:[
+        [1,"{timeout: 60, retries: 3}"],[2,"{timeout: 30}"]
+      ]},
+      approach: "map_concat() exists but on key collisions its behavior isn't a reliable 'last wins' across all Spark versions — the robust, version-proof approach explodes both maps to (key,value) rows tagged with a source priority, unions them, and uses ROW_NUMBER-style dedup (here, a window + first()) to pick override's value whenever a key exists in both, then rebuilds a map from the winning rows with map_from_entries(). It's more steps, but it's an explicit, auditable precedence rule rather than trusting an engine-specific merge function.",
+      solution:
+`base = product_attributes = <span class="py-kw">None</span>  <span class="py-com"># (placeholder to avoid name clash with prior example)</span>
+base_rows = config_rows.select(<span class="py-str">"service_id"</span>, F.explode(<span class="py-str">"base_config"</span>).alias(<span class="py-str">"k"</span>, <span class="py-str">"v"</span>)) \\
+    .withColumn(<span class="py-str">"priority"</span>, F.lit(1))
+override_rows = config_rows.select(<span class="py-str">"service_id"</span>, F.explode(<span class="py-str">"override_config"</span>).alias(<span class="py-str">"k"</span>, <span class="py-str">"v"</span>)) \\
+    .withColumn(<span class="py-str">"priority"</span>, F.lit(2))  <span class="py-com"># higher priority = wins</span>
+
+unioned = base_rows.unionByName(override_rows)
+
+w = Window.partitionBy(<span class="py-str">"service_id"</span>, <span class="py-str">"k"</span>).orderBy(F.desc(<span class="py-str">"priority"</span>))
+winners = (
+    unioned.withColumn(<span class="py-str">"rn"</span>, F.row_number().over(w))
+    .filter(F.col(<span class="py-str">"rn"</span>) == 1)
+)
+
+result = winners.groupBy(<span class="py-str">"service_id"</span>).agg(
+    F.map_from_entries(F.collect_list(F.struct(<span class="py-str">"k"</span>, <span class="py-str">"v"</span>))).alias(<span class="py-str">"merged_config"</span>)
+)
+result.show(truncate=<span class="py-kw">False</span>)`,
+      gotcha: "collect_list inside an aggregation does not guarantee row order across partitions — fine here since we only need the *set* of winning (k,v) pairs, but call that out explicitly if the interviewer asks whether ordering is preserved."
+    }
+  ]
+},
+
+{
+  name: "Dynamic Column & Schema Operations",
+  blurb: "Column logic driven by the schema itself — for tables where the exact columns aren't known until runtime.",
+  questions: [
+    {
+      id: "dynamic-select-pattern",
+      difficulty: "med",
+      tables: ["metrics_wide"],
+      title: "Dynamically Select & Cast Columns by Name Pattern",
+      prompt: "A metrics table has an unknown, growing number of columns named <code>metric_*</code>. Select only those columns (plus <code>id</code>), casting each to <code>double</code>, without hardcoding any column names.",
+      faang: "asked at: Netflix, Stripe",
+      boilerplate:
+`metrics_wide = spark.createDataFrame([
+    (1, <span class="py-str">"5"</span>, <span class="py-str">"10"</span>, <span class="py-str">"ignore_me"</span>),
+    (2, <span class="py-str">"7"</span>, <span class="py-str">"3"</span>,  <span class="py-str">"ignore_me"</span>),
+], [<span class="py-str">"id"</span>, <span class="py-str">"metric_clicks"</span>, <span class="py-str">"metric_views"</span>, <span class="py-str">"notes"</span>])`,
+      inputTable: {cols:["id","metric_clicks","metric_views","notes"], rows:[
+        [1,"5","10","ignore_me"],[2,"7","3","ignore_me"]
+      ]},
+      outputTable: {cols:["id","metric_clicks","metric_views"], rows:[
+        [1,"5.0","10.0"],[2,"7.0","3.0"]
+      ]},
+      approach: "df.columns is just a plain Python list of strings — ordinary Python filtering (a list comprehension checking str.startswith('metric_')) picks the target columns without ever naming them literally. Feeding that filtered list into a second comprehension of F.col(c).cast('double') builds the select() expression list programmatically, so the code keeps working unchanged if a new metric_* column shows up next month.",
+      solution:
+`metric_cols = [c <span class="py-kw">for</span> c <span class="py-kw">in</span> metrics_wide.columns <span class="py-kw">if</span> c.startswith(<span class="py-str">"metric_"</span>)]
+
+select_exprs = [F.col(<span class="py-str">"id"</span>)] + [F.col(c).cast(<span class="py-str">"double"</span>) <span class="py-kw">for</span> c <span class="py-kw">in</span> metric_cols]
+
+result = metrics_wide.select(*select_exprs)
+result.show()`,
+      gotcha: "select(*select_exprs) needs the unpacking * — passing the Python list directly to select() without unpacking throws a type error, since select() expects *cols, not a single list argument (there's a separate DataFrame.select(list) overload in some versions, but the *args form is the one to default to)."
+    },
+    {
+      id: "recursive-struct-flatten",
+      difficulty: "hard",
+      tables: ["nested_events"],
+      title: "Recursively Flatten an Arbitrarily Deep Nested Struct",
+      prompt: "A JSON-derived DataFrame has structs nested several levels deep, and the depth isn't known in advance. Write a function that flattens <b>any</b> such schema into dot-free, underscore-joined column names — no hardcoded field paths.",
+      faang: "asked at: Google, Airbnb (schema-agnostic ETL question)",
+      boilerplate:
+`<span class="py-kw">from</span> pyspark.sql.types <span class="py-kw">import</span> StructType
+
+nested_events = spark.read.json(spark.sparkContext.parallelize([
+    <span class="py-str">'{"user": {"profile": {"id": 1, "name": "Alice"}, "region": "US"}, "action": "click"}'</span>,
+    <span class="py-str">'{"user": {"profile": {"id": 2, "name": "Bob"},   "region": "EU"}, "action": "view"}'</span>,
+]))
+<span class="py-com"># nested_events schema: user: struct<profile: struct<id, name>, region>, action: string</span>`,
+      inputTable: {cols:["user.profile.id","user.profile.name","user.region","action"], rows:[
+        ["1","Alice","US","click"],["2","Bob","EU","view"]
+      ]},
+      outputTable: {cols:["user_profile_id","user_profile_name","user_region","action"], rows:[
+        ["1","Alice","US","click"],["2","Bob","EU","view"]
+      ]},
+      approach: "Walk df.schema recursively: for each StructField, if its dataType is itself a StructType, recurse into it building up a prefixed path (parent__child); otherwise it's a leaf, so emit F.col('full.dot.path').alias('joined_underscore_name'). The recursion needs to reference the *original* nested column path when reading (dot notation, e.g. user.profile.id) but produce a flat *alias* — mixing those two up is the most common bug. Once the recursive function returns a flat list of Column expressions, a single select(*flat_cols) does the whole flatten in one pass, regardless of how deep the nesting goes.",
+      solution:
+`<span class="py-kw">def</span> flatten_schema(schema, prefix=<span class="py-kw">None</span>):
+    fields = []
+    <span class="py-kw">for</span> field <span class="py-kw">in</span> schema.fields:
+        full_path = <span class="py-kw">f"</span>{prefix}.{field.name}<span class="py-kw">"</span> <span class="py-kw">if</span> prefix <span class="py-kw">else</span> field.name
+        flat_name = <span class="py-kw">f"</span>{prefix}_{field.name}<span class="py-kw">"</span> <span class="py-kw">if</span> prefix <span class="py-kw">else</span> field.name
+        <span class="py-kw">if</span> isinstance(field.dataType, StructType):
+            fields += flatten_schema(field.dataType, prefix=full_path.replace(<span class="py-str">"."</span>, <span class="py-str">"_"</span>) <span class="py-kw">if</span> <span class="py-kw">False</span> <span class="py-kw">else</span> full_path)
+        <span class="py-kw">else</span>:
+            fields.append(F.col(full_path).alias(flat_name))
+    <span class="py-kw">return</span> fields
+
+<span class="py-com"># cleaner two-arg version tracking dot-path (for reading) and underscore-path (for naming) separately:</span>
+<span class="py-kw">def</span> flatten(schema, dot_prefix=<span class="py-str">""</span>, name_prefix=<span class="py-str">""</span>):
+    cols = []
+    <span class="py-kw">for</span> field <span class="py-kw">in</span> schema.fields:
+        dot_path  = <span class="py-kw">f"</span>{dot_prefix}.{field.name}<span class="py-kw">"</span> <span class="py-kw">if</span> dot_prefix <span class="py-kw">else</span> field.name
+        flat_name = <span class="py-kw">f"</span>{name_prefix}_{field.name}<span class="py-kw">"</span> <span class="py-kw">if</span> name_prefix <span class="py-kw">else</span> field.name
+        <span class="py-kw">if</span> isinstance(field.dataType, StructType):
+            cols += flatten(field.dataType, dot_path, flat_name)
+        <span class="py-kw">else</span>:
+            cols.append(F.col(dot_path).alias(flat_name))
+    <span class="py-kw">return</span> cols
+
+flat_cols = flatten(nested_events.schema)
+result = nested_events.select(*flat_cols)
+result.show()`,
+      gotcha: "This flattens structs but deliberately doesn't touch arrays — an array-of-structs field needs an explode() decision (one row per element) before it can be flattened the same way, and silently ignoring that distinction is a common half-correct answer."
+    }
+  ]
+},
+
+{
+  name: "Partitioning, Skew & Broadcast Joins",
+  blurb: "The 'now make it fast at scale' follow-up almost every array/JSON question eventually gets in a senior loop.",
+  questions: [
+    {
+      id: "broadcast-join-basic",
+      difficulty: "med",
+      tables: ["orders","countries"],
+      title: "Broadcast a Small Dimension Table to Avoid a Shuffle",
+      prompt: "Join a large <code>orders</code> fact table to a tiny <code>countries</code> lookup table (a couple hundred rows) on <code>country_code</code>. Avoid shuffling the large table.",
+      faang: "asked at: virtually every FAANG data engineering loop",
+      boilerplate:
+`<span class="py-kw">from</span> pyspark.sql.functions <span class="py-kw">import</span> broadcast
+
+<span class="py-com"># orders: ~500M rows; countries: ~200 rows</span>
+orders = spark.table(<span class="py-str">"orders"</span>)
+countries = spark.table(<span class="py-str">"countries"</span>)`,
+      inputTable: {cols:["table","approx_rows"], rows:[
+        ["orders","500,000,000"],["countries","200"]
+      ]},
+      outputTable: {cols:["plan_step","detail"], rows:[
+        ["join strategy","BroadcastHashJoin"],["shuffle on orders","none"],["shuffle on countries","none — sent whole to every executor"]
+      ]},
+      approach: "By default Spark decides join strategy using spark.sql.autoBroadcastJoinThreshold (10MB by default) — countries is almost certainly under that and gets auto-broadcast already. The explicit F.broadcast() hint matters when the optimizer's size *estimate* is wrong (e.g. after several transformations Spark can't size accurately, or the table is just over the default threshold but still clearly 'small' by any practical measure) — an explicit hint overrides the cost-based guess. Confirm it worked with .explain() and look for BroadcastHashJoin instead of SortMergeJoin in the physical plan.",
+      solution:
+`result = orders.join(broadcast(countries), <span class="py-str">"country_code"</span>, <span class="py-str">"left"</span>)
+result.explain()
+<span class="py-com"># Look for "BroadcastHashJoin" in the physical plan output —
+# that confirms countries was sent whole to every executor
+# instead of shuffling both sides by join key.</span>`,
+      gotcha: "Broadcasting a table that turns out to be larger than expected (e.g. after an upstream filter didn't reduce it as much as assumed) can blow out executor memory and crash the job — broadcast is a deliberate override, not a free performance button, and should be paired with a rough row-count/size sanity check."
+    },
+    {
+      id: "salting-skewed-join",
+      difficulty: "hard",
+      tables: ["events_skewed","user_dim"],
+      title: "Fix a Skewed Join With Key Salting",
+      prompt: "Joining <code>events_skewed</code> to <code>user_dim</code> on <code>user_id</code> is badly skewed — one <code>user_id</code> (a bot/test account) accounts for 40% of all rows, so one task takes far longer than the rest. Rewrite the join to spread that key's work across multiple tasks.",
+      faang: "asked at: Uber, LinkedIn, Meta (senior-level performance round)",
+      boilerplate:
+`<span class="py-com"># events_skewed: user_id 999 alone ≈ 40% of ~2B rows
+# user_dim: one row per user_id, small enough to broadcast</span>
+events_skewed = spark.table(<span class="py-str">"events_skewed"</span>)
+user_dim = spark.table(<span class="py-str">"user_dim"</span>)
+N_SALT = 10  <span class="py-com"># number of salt buckets</span>`,
+      inputTable: {cols:["user_id","approx_row_share"], rows:[
+        ["999 (bot account)","~40%"],["all other user_ids combined","~60%"]
+      ]},
+      outputTable: {cols:["change","effect"], rows:[
+        ["salted user_id 999 into 10 sub-keys","its rows now split across 10 tasks instead of 1"],
+        ["user_dim replicated x10 for salted keys only","join correctness preserved, no full broadcast needed"]
+      ]},
+      approach: "Salting: append a random integer suffix (0..N_SALT-1) to the skewed key on the large side, turning one massive partition into N_SALT smaller ones that can run in parallel. The small side needs a matching salted key for every bucket the large side might use — so it gets explicitly replicated N_SALT times (a small cross join against a 0..N_SALT-1 range), not salted randomly, since the join has to find every possible large-side salt value on the small side. Only the known-skewed key(s) need salting; salting every key wastes shuffle on data that wasn't skewed to begin with, so it's worth detecting the heavy hitter(s) first (a simple groupBy(user_id).count().orderBy(desc) sample) rather than blanket-salting.",
+      solution:
+`<span class="py-kw">from</span> pyspark.sql <span class="py-kw">import</span> functions <span class="py-kw">as</span> F
+
+SKEWED_KEYS = [999]  <span class="py-com"># identified via events_skewed.groupBy("user_id").count() beforehand</span>
+
+<span class="py-com"># 1. Salt the large side: skewed keys get a random suffix, everyone else is untouched</span>
+salted_events = events_skewed.withColumn(
+    <span class="py-str">"salt"</span>,
+    F.when(F.col(<span class="py-str">"user_id"</span>).isin(SKEWED_KEYS), (F.rand() * N_SALT).cast(<span class="py-str">"int"</span>)).otherwise(F.lit(0))
+).withColumn(<span class="py-str">"salted_user_id"</span>, F.concat(F.col(<span class="py-str">"user_id"</span>), F.lit(<span class="py-str">"_"</span>), F.col(<span class="py-str">"salt"</span>)))
+
+<span class="py-com"># 2. Replicate the small side across every possible salt value, but ONLY for the skewed keys</span>
+skewed_dim = user_dim.filter(F.col(<span class="py-str">"user_id"</span>).isin(SKEWED_KEYS))
+salt_range = spark.range(N_SALT).withColumnRenamed(<span class="py-str">"id"</span>, <span class="py-str">"salt"</span>)
+replicated_dim = skewed_dim.crossJoin(salt_range).withColumn(
+    <span class="py-str">"salted_user_id"</span>, F.concat(F.col(<span class="py-str">"user_id"</span>), F.lit(<span class="py-str">"_"</span>), F.col(<span class="py-str">"salt"</span>))
+)
+
+<span class="py-com"># 3. Non-skewed keys join normally (salt is always 0 on both sides for them)</span>
+normal_dim = user_dim.filter(~F.col(<span class="py-str">"user_id"</span>).isin(SKEWED_KEYS)).withColumn(
+    <span class="py-str">"salted_user_id"</span>, F.concat(F.col(<span class="py-str">"user_id"</span>), F.lit(<span class="py-str">"_0"</span>))
+)
+
+salted_dim = replicated_dim.unionByName(normal_dim).drop(<span class="py-str">"salt"</span>)
+
+result = salted_events.join(salted_dim, <span class="py-str">"salted_user_id"</span>, <span class="py-str">"left"</span>)
+result.show()`,
+      gotcha: "This is exactly what Adaptive Query Execution's skew join optimization (spark.sql.adaptive.skewJoin.enabled, on by default in Spark 3.x) tries to do automatically — the honest senior-level answer is 'check if AQE already fixed this before hand-rolling salting', and only reach for manual salting when AQE's detection thresholds don't catch the specific skew pattern."
+    }
+  ]
+}
+
+];
+
+function buildTable(t){
+  let html = '<div class="table-scroll"><table class="data"><thead><tr>';
+  t.cols.forEach(c => html += `<th>${c}</th>`);
+  html += '</tr></thead><tbody>';
+  t.rows.forEach(r => {
+    html += '<tr>';
+    r.forEach(v => html += `<td>${String(v).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+const stack = document.getElementById('stack');
+const indexTopics = document.getElementById('indexTopics');
+
+let qCounter = 0;
+topics.forEach((topic, ti) => {
+  const tnum = String(ti+1).padStart(2,'0');
+
+  const idxTopicEl = document.createElement('div');
+  idxTopicEl.className = 'index-topic';
+  const grid = document.createElement('div');
+  grid.className = 'index-grid';
+  idxTopicEl.innerHTML = `<div class="index-topic-name"><span class="tnum">${tnum}</span> ${topic.name}</div>`;
+  idxTopicEl.appendChild(grid);
+  indexTopics.appendChild(idxTopicEl);
+
+  const divider = document.createElement('div');
+  divider.className = 'topic-divider';
+  divider.id = `topic-${ti}`;
+  divider.innerHTML = `<h2><span class="tag">${tnum}</span> ${topic.name}</h2><div class="line"></div>`;
+  stack.appendChild(divider);
+
+  const blurbEl = document.createElement('p');
+  blurbEl.className = 'topic-blurb';
+  blurbEl.textContent = topic.blurb;
+  stack.appendChild(blurbEl);
+
+  topic.questions.forEach((q) => {
+    qCounter++;
+    const num = String(qCounter).padStart(2,'0');
+
+    const idxEl = document.createElement('a');
+    idxEl.href = `#${q.id}`;
+    idxEl.className = 'index-item';
+    idxEl.innerHTML = `<span class="n">${num}</span> ${q.title}`;
+    grid.appendChild(idxEl);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = q.id;
+    card.innerHTML = `
+      <div class="card-head">
+        <div class="card-head-top">
+          <span class="qnum">Q${num}</span>
+          <span class="difficulty ${q.difficulty}">${q.difficulty === 'hard' ? 'Hard' : 'Medium'}</span>
+          ${q.faang ? `<span class="faang">${q.faang}</span>` : ''}
+          <span class="tables-used">${q.tables.map(t => `<span class="table-tag">${t}</span>`).join('')}</span>
+        </div>
+        <h3 class="card-title">${q.title}</h3>
+        <p class="card-prompt">${q.prompt}</p>
+      </div>
+      <div class="card-body">
+        <div class="section-label">Boilerplate — DataFrame setup</div>
+        <pre><code>${q.boilerplate}</code></pre>
+
+        <div class="section-label">Input / Expected Output</div>
+        <div class="io-pair">
+          <div class="io-block"><h4>Input</h4>${buildTable(q.inputTable)}</div>
+          <div class="io-block"><h4>Expected Output</h4>${buildTable(q.outputTable)}</div>
+        </div>
+
+        <details class="solution">
+          <summary><span class="prompt-txt">#</span> <span class="exec">Reveal solution</span> <span class="prompt-txt">(try it yourself first)</span></summary>
+          <div class="solution-inner">
+            <p class="approach"><b>Approach:</b> ${q.approach}</p>
+            <pre><code>${q.solution}</code></pre>
+            ${q.gotcha ? `<p class="gotcha"><b>Gotcha:</b> ${q.gotcha}</p>` : ''}
+          </div>
+        </details>
+      </div>
+    `;
+    stack.appendChild(card);
+  });
+});
+</script>
+</body>
+</html>
