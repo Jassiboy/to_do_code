@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strings &amp; Dictionaries Console — Data Engineer Prep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10141B;
+    --bg-panel: #171D26;
+    --bg-panel-raised: #1D2530;
+    --line: #2A3341;
+    --line-soft: #212933;
+    --text: #E8ECF1;
+    --text-muted: #8B96A5;
+    --text-dim: #5C6675;
+    --amber: #F2B84B;
+    --amber-dim: #7A6534;
+    --teal: #5FD4C7;
+    --teal-dim: #2B5A54;
+    --rose: #E8836F;
+    --violet: #B79CF2;
+    --violet-dim: #4A3E6B;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --display: 'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -5%, rgba(95,212,199,0.07), transparent),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(242,184,75,0.06), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  [contenteditable="true"]:hover{outline:1px dashed var(--teal-dim); outline-offset:2px; border-radius:4px;}
+  [contenteditable="true"]:focus{outline:1px solid var(--teal); outline-offset:2px; border-radius:4px;}
+
+  .topbar{
+    border-bottom:1px solid var(--line);
+    padding:14px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    background:rgba(16,20,27,0.92);
+    backdrop-filter:blur(10px);
+    z-index:50;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .topbar-left{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--text-dim);}
+  .dot-row{display:flex;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;}
+  .dot.r{background:#E8836F;} .dot.y{background:#F2B84B;} .dot.g{background:#5FD4C7;}
+  .topbar-actions{display:flex;gap:8px;}
+  .btn{
+    font-family:var(--mono);
+    font-size:12px;
+    padding:7px 13px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--bg-panel);
+    color:var(--text-muted);
+    cursor:pointer;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--teal-dim);color:var(--text);}
+  .btn.on{background:var(--teal);color:var(--bg);border-color:var(--teal);font-weight:600;}
+
+  .hero{max-width:960px;margin:0 auto;padding:56px 28px 36px;}
+  .eyebrow{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:0.12em;color:var(--teal);
+    text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  }
+  .eyebrow::before{content:'❯';color:var(--amber);font-weight:700;}
+  h1{font-family:var(--display);font-size:40px;line-height:1.12;margin:0 0 16px;font-weight:700;letter-spacing:-0.01em;}
+  h1 .hl{color:var(--amber);}
+  h1 .hl2{color:var(--violet);}
+  .lede{color:var(--text-muted);font-size:16px;max-width:680px;margin:0 0 26px;}
+  .lede b{color:var(--text);font-weight:600;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:12px;}
+  .chip{border:1px solid var(--line);background:var(--bg-panel);color:var(--text-muted);padding:6px 12px;border-radius:20px;}
+  .chip b{color:var(--text);}
+
+  .section-wrap{max-width:960px;margin:0 auto;padding:0 28px 40px;}
+  .section-title{
+    font-family:var(--mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;
+    letter-spacing:0.1em;margin-bottom:14px;display:flex;align-items:center;gap:8px;
+  }
+  .section-title::after{content:'';flex:1;height:1px;background:var(--line-soft);}
+
+  .tips-card{
+    border:1px solid var(--line);border-radius:10px;background:var(--bg-panel);padding:20px 24px;
+  }
+  .tips-card ul{margin:0;padding-left:20px;}
+  .tips-card li{margin-bottom:8px;color:var(--text-muted);font-size:14.5px;}
+  .tips-card li::marker{color:var(--amber);}
+  .tips-card li b{color:var(--text);}
+
+  .quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:720px){.quick-grid{grid-template-columns:1fr;}}
+  .quick-card{
+    border:1px solid var(--line-soft);border-radius:10px;background:var(--bg-panel);padding:16px 18px;
+  }
+  .quick-card .qtitle{font-family:var(--display);font-size:16px;font-weight:600;margin:0 0 6px;}
+  .quick-card a{color:var(--teal);font-family:var(--mono);font-size:11.5px;text-decoration:none;word-break:break-all;}
+  .quick-card a:hover{text-decoration:underline;}
+  .quick-card .hint{
+    margin-top:10px;padding:9px 12px;background:var(--bg-panel-raised);border-left:2px solid var(--amber);
+    border-radius:0 6px 6px 0;font-size:13px;color:var(--text-muted);
+  }
+  .quick-card .hint b{color:var(--amber);}
+
+  .index-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:8px;}
+  .index-item{
+    border:1px solid var(--line-soft);border-radius:8px;padding:10px 14px;text-decoration:none;
+    color:var(--text-muted);font-size:13.5px;display:flex;gap:10px;align-items:baseline;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .index-item:hover{border-color:var(--teal-dim);color:var(--text);background:var(--bg-panel);}
+  .index-item .n{font-family:var(--mono);color:var(--amber);font-size:12px;}
+  .index-item.bonus .n{color:var(--violet);}
+
+  .stack{max-width:960px;margin:0 auto;padding:0 28px 100px;display:flex;flex-direction:column;gap:22px;}
+  .card{border:1px solid var(--line);border-radius:10px;background:var(--bg-panel);overflow:hidden;scroll-margin-top:80px;}
+  .card.bonus{border-color:var(--violet-dim);}
+  .card-head{padding:20px 24px 16px;border-bottom:1px solid var(--line-soft);}
+  .card-head-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+  .qnum{font-family:var(--mono);font-size:12px;color:var(--bg);background:var(--amber);padding:2px 8px;border-radius:4px;font-weight:700;}
+  .qnum.bonus{background:var(--violet);}
+  .difficulty{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.06em;padding:2px 9px;border-radius:20px;
+    border:1px solid;text-transform:uppercase;
+  }
+  .difficulty.easy{color:var(--teal);border-color:var(--teal-dim);}
+  .difficulty.med{color:var(--amber);border-color:var(--amber-dim);}
+  .difficulty.hard{color:var(--rose);border-color:#5E3A32;}
+  .bonus-tag{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.06em;padding:2px 9px;border-radius:20px;
+    border:1px solid var(--violet-dim);color:var(--violet);text-transform:uppercase;
+  }
+  .card-link{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--teal);text-decoration:none;}
+  .card-link:hover{text-decoration:underline;}
+  .card-title{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 8px;}
+  .card-prompt{color:var(--text-muted);font-size:14.5px;margin:0;}
+  .card-prompt code{font-family:var(--mono);background:var(--bg-panel-raised);padding:1px 6px;border-radius:4px;font-size:13px;color:var(--teal);}
+
+  .card-body{padding:20px 24px 24px;}
+  .section-label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--text-dim);margin:18px 0 8px;display:flex;align-items:center;gap:8px;
+  }
+  .section-label:first-child{margin-top:0;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--line-soft);}
+
+  pre{
+    margin:0;background:#0C0F14;border:1px solid var(--line-soft);border-radius:8px;padding:14px 16px;
+    overflow-x:auto;font-family:var(--mono);font-size:12.6px;line-height:1.55;white-space:pre-wrap;
+  }
+  code{font-family:var(--mono);}
+  .kw{color:#C58AF2;} .str{color:#A8D97A;} .com{color:var(--text-dim);font-style:italic;} .fn{color:var(--teal);} .num{color:#E8836F;}
+
+  .io-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:720px){.io-pair{grid-template-columns:1fr;}}
+  .io-block{background:#0C0F14;border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .io-block h4{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em;}
+  .io-block .val{font-family:var(--mono);font-size:13px;color:var(--text);}
+
+  details.solution{
+    margin-top:20px;border:1px dashed var(--line);border-radius:8px;
+    background:linear-gradient(180deg, rgba(95,212,199,0.03), transparent);
+  }
+  details.solution summary{
+    list-style:none;cursor:pointer;padding:13px 18px;display:flex;align-items:center;gap:10px;
+    font-family:var(--mono);font-size:13px;color:var(--teal);user-select:none;
+  }
+  details.solution summary::-webkit-details-marker{display:none;}
+  details.solution summary::before{content:'▶';font-size:10px;color:var(--text-dim);transition:transform .18s ease;}
+  details.solution[open] summary::before{transform:rotate(90deg);}
+  details.solution summary .prompt-txt{color:var(--text-dim);}
+  details.solution summary .exec{color:var(--amber);}
+  details.solution[open] summary{border-bottom:1px solid var(--line-soft);}
+  .solution-inner{padding:16px 18px 20px;}
+  .approach{
+    color:var(--text-muted);font-size:13.5px;margin:0 0 14px;padding:10px 14px;
+    background:var(--bg-panel-raised);border-left:2px solid var(--teal);border-radius:0 6px 6px 0;
+  }
+  .de-angle{
+    margin-top:14px;padding:10px 14px;background:var(--bg-panel-raised);border-left:2px solid var(--violet);
+    border-radius:0 6px 6px 0;font-size:13.5px;color:var(--text-muted);
+  }
+  .de-angle b{color:var(--violet);}
+
+  footer{
+    max-width:960px;margin:0 auto;padding:0 28px 60px;font-family:var(--mono);font-size:12px;
+    color:var(--text-dim);border-top:1px solid var(--line-soft);padding-top:24px;
+  }
+  footer .blink{color:var(--teal);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="dot-row"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+    strings_dictionary_prep.py
+  </div>
+  <div class="topbar-actions">
+    <button class="btn" id="editToggle">✏️ Edit mode: off</button>
+    <button class="btn" id="downloadBtn">⬇ Save edited copy</button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="eyebrow">practice set · strings &amp; dictionaries (hash maps)</div>
+  <h1>Strings &amp; Dictionaries for your <span class="hl">FAANG</span> / <span class="hl2">Senior Data Engineer</span> loop</h1>
+  <p class="lede" contenteditable="true">
+    Pitched at a <b>~6-year data engineer</b> round: the bar is not just "get it working" but picking the right
+    key, stating complexity, handling edge cases, and talking about scale. Covers frequency maps, hash-key design,
+    prefix-sum + dict, hash sets, string parsing, and dict-backed design problems (LRU, time-versioned store, rate limiter).
+    Items marked <span style="color:var(--violet)">bonus</span> are DE-flavoured extras. Click <b>"Edit mode"</b> to edit
+    anything on the page, then <b>"Save edited copy"</b> to download your version.
+  </p>
+  <div class="meta-row">
+    <div class="chip"><b>16</b> problems</div>
+    <div class="chip"><b>13</b> core</div>
+    <div class="chip"><b>3</b> bonus (DE-flavoured)</div>
+    <div class="chip"><b>3</b> quick-revision problems</div>
+    <div class="chip">Editable in-browser</div>
+  </div>
+</div>
+
+<div class="section-wrap">
+  <div class="section-title">General tips</div>
+  <div class="tips-card">
+    <ul contenteditable="true">
+      <li><b>Ask clarifying questions first:</b> case sensitivity, Unicode vs ASCII, whitespace/empty input, duplicates, and input size. Seniors are expected to surface these before coding.</li>
+      <li><b>Dict/set lookups are O(1) average, O(n) worst case.</b> Use a dict whenever you catch yourself writing a nested loop just to "find the matching element".</li>
+      <li><b>Pick the key deliberately.</b> Anagram grouping: sorted string (O(k log k)) vs 26-count tuple (O(k)). Prefix-sum problems: the key is the running sum, the value is how often you saw it.</li>
+      <li>Python toolbox: <b>Counter</b>, <b>defaultdict(list/int)</b>, <b>OrderedDict</b> (move_to_end), <b>set</b>, <b>bisect</b>. Know them cold; they cut code and bugs.</li>
+      <li><b>Seed the dict correctly.</b> Subarray-sum problems need <code>{0: 1}</code> so subarrays starting at index 0 are counted. Forgetting this is the classic off-by-one.</li>
+      <li><b>Strings are immutable</b> in Python: build with a list and <code>''.join()</code> instead of repeated <code>+=</code> in a loop.</li>
+      <li>For lowercase-only input, a fixed <b>[0]*26</b> array indexed by <code>ord(c) - ord('a')</code> is faster and lighter than a dict.</li>
+      <li><b>Always close with scale:</b> "what if the data does not fit in memory?" Typical answers: partition by key (hash-partition), external sort, approximate structures (Count-Min Sketch, HyperLogLog, Bloom filter), or a group-by in Spark.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section-wrap">
+  <div class="section-title">Quick revision problems</div>
+  <div class="quick-grid">
+    <div class="quick-card">
+      <h3 class="qtitle" contenteditable="true">Group Anagrams (medium)</h3>
+      <a href="https://leetcode.com/problems/group-anagrams/" target="_blank" rel="noopener">leetcode.com/problems/group-anagrams</a>
+      <div class="hint" contenteditable="true"><b>Hint:</b> Build a canonical key per word: a 26-length count tuple (O(k)) beats sorting the word (O(k log k)). Store lists in a defaultdict(list).</div>
+    </div>
+    <div class="quick-card">
+      <h3 class="qtitle" contenteditable="true">Subarray Sum Equals K (medium)</h3>
+      <a href="https://leetcode.com/problems/subarray-sum-equals-k/" target="_blank" rel="noopener">leetcode.com/problems/subarray-sum-equals-k</a>
+      <div class="hint" contenteditable="true"><b>Hint:</b> Prefix sum + dict of counts, seeded with {0: 1}. At each step add <code>count[running - k]</code>. Works with negatives, unlike sliding window.</div>
+    </div>
+    <div class="quick-card">
+      <h3 class="qtitle" contenteditable="true">Longest Consecutive Sequence (medium)</h3>
+      <a href="https://leetcode.com/problems/longest-consecutive-sequence/" target="_blank" rel="noopener">leetcode.com/problems/longest-consecutive-sequence</a>
+      <div class="hint" contenteditable="true"><b>Hint:</b> Put everything in a set. Only start counting from numbers where <code>n-1</code> is NOT in the set, so each element is visited once overall: O(n), not O(n log n).</div>
+    </div>
+  </div>
+</div>
+
+<div class="section-wrap">
+  <div class="section-title">Jump to a problem</div>
+  <div class="index-grid" id="indexGrid"></div>
+</div>
+
+<div class="stack" id="stack"></div>
+
+<footer>
+  <span class="blink">$</span> tip — at senior level, the follow-up is almost always scale: "now it is 10 TB of strings / events". Have one sentence ready per problem (the "DE interview angle" on each card) covering partitioning, skew on hot keys, and approximate alternatives.
+</footer>
+
+<script>
+const problems = [
+{
+  id: "valid-anagram", difficulty: "easy", bonus: false,
+  title: "Valid Anagram",
+  link: "https://leetcode.com/problems/valid-anagram/",
+  prompt: `Given two strings <code>s</code> and <code>t</code>, return true if <code>t</code> is an anagram of <code>s</code>.`,
+  input: `s = "anagram", t = "nagaram"`,
+  output: `true`,
+  approach: `Equal length is a precondition. Count characters of s in a dict, then decrement while scanning t; if a count is missing or zero, it is not an anagram. O(n) time, O(k) space (k = alphabet size). Beats sorting both strings (O(n log n)).`,
+  solution: `def is_anagram(s, t):
+    if len(s) != len(t):
+        return False
+    count = {}
+    for c in s:
+        count[c] = count.get(c, 0) + 1
+    for c in t:
+        if count.get(c, 0) == 0:
+            return False
+        count[c] -= 1
+    return True`,
+  deAngle: `Follow-up: "what if the strings contain Unicode?" A dict handles it unchanged, while a fixed 26-array does not. Mention normalization (NFC/NFD) and case-folding before comparing.`
+},
+{
+  id: "first-unique-char", difficulty: "easy", bonus: false,
+  title: "First Unique Character in a String",
+  link: "https://leetcode.com/problems/first-unique-character-in-a-string/",
+  prompt: `Return the <code>index</code> of the first non-repeating character in a string, or -1 if none exists.`,
+  input: `s = "loveleetcode"`,
+  output: `2   (the character 'v')`,
+  approach: `Two passes: first build a frequency map, then scan the string in original order and return the first index whose count is 1. O(n) time, O(k) space.`,
+  solution: `from collections import Counter
+
+def first_uniq_char(s):
+    freq = Counter(s)
+    for i, c in enumerate(s):
+        if freq[c] == 1:
+            return i
+    return -1`,
+  deAngle: `Follow-up: "do it in a single pass over a stream you cannot rewind." Keep an insertion-ordered dict (or dict + queue) of candidates and evict a char the moment it repeats. This is the shape of "first-seen unique event" logic in streaming.`
+},
+{
+  id: "two-sum", difficulty: "easy", bonus: false,
+  title: "Two Sum",
+  link: "https://leetcode.com/problems/two-sum/",
+  prompt: `Given an array and a target, return the <code>indices</code> of the two numbers that add up to the target. Exactly one solution exists.`,
+  input: `nums = [2, 7, 11, 15], target = 9`,
+  output: `[0, 1]`,
+  approach: `One pass with a dict of value to index. For each x, check whether target - x was already seen; otherwise record x. O(n) time, O(n) space. Use this when the array is unsorted; the two-pointer version needs sorted input.`,
+  solution: `def two_sum(nums, target):
+    seen = {}
+    for i, x in enumerate(nums):
+        if target - x in seen:
+            return [seen[target - x], i]
+        seen[x] = i
+    return []`,
+  deAngle: `Follow-up: "same thing on two huge tables." That is a hash join on (target - value): broadcast the smaller side, otherwise shuffle both on the join key. Naming skew on hot keys and salting is the senior-level answer.`
+},
+{
+  id: "group-anagrams", difficulty: "med", bonus: false,
+  title: "Group Anagrams",
+  link: "https://leetcode.com/problems/group-anagrams/",
+  prompt: `Given an array of strings, group the anagrams together. Order of groups does not matter.`,
+  input: `strs = ["eat","tea","tan","ate","nat","bat"]`,
+  output: `[["eat","tea","ate"], ["tan","nat"], ["bat"]]`,
+  approach: `Map a canonical signature to the list of words that share it. For lowercase words, a 26-count tuple is the key: O(n * k) time overall, vs O(n * k log k) when sorting each word. Tuples are hashable; lists are not.`,
+  solution: `from collections import defaultdict
+
+def group_anagrams(strs):
+    groups = defaultdict(list)
+    for w in strs:
+        count = [0] * 26
+        for c in w:
+            count[ord(c) - ord('a')] += 1
+        groups[tuple(count)].append(w)
+    return list(groups.values())`,
+  deAngle: `Follow-up: "how would you do this in Spark?" Compute the signature column, then groupBy(signature).agg(collect_list(word)). Discuss skew when a few signatures dominate, and the memory risk of collect_list on huge groups.`
+},
+{
+  id: "top-k-frequent", difficulty: "med", bonus: false,
+  title: "Top K Frequent Elements",
+  link: "https://leetcode.com/problems/top-k-frequent-elements/",
+  prompt: `Given an integer array and k, return the <code>k most frequent</code> elements.`,
+  input: `nums = [1,1,1,2,2,3], k = 2`,
+  output: `[1, 2]`,
+  approach: `Count with a dict, then bucket-sort by frequency (index = count). Walk buckets from highest frequency down until you have k items. O(n) time, better than a heap's O(n log k) when k is large; mention both.`,
+  solution: `from collections import Counter
+
+def top_k_frequent(nums, k):
+    freq = Counter(nums)
+    buckets = [[] for _ in range(len(nums) + 1)]
+    for num, f in freq.items():
+        buckets[f].append(num)
+    result = []
+    for f in range(len(buckets) - 1, 0, -1):
+        for num in buckets[f]:
+            result.append(num)
+            if len(result) == k:
+                return result
+    return result`,
+  deAngle: `Follow-up: "top-K over a stream / 10 TB of logs." Use per-partition counts and merge, or a Count-Min Sketch plus a min-heap of size k for approximate heavy hitters. In Spark: groupBy + count + orderBy/limit, or a two-stage aggregation to limit shuffle.`
+},
+{
+  id: "longest-consecutive", difficulty: "med", bonus: false,
+  title: "Longest Consecutive Sequence",
+  link: "https://leetcode.com/problems/longest-consecutive-sequence/",
+  prompt: `Given an unsorted array, return the length of the longest run of consecutive integers. Must run in <code>O(n)</code>.`,
+  input: `nums = [100, 4, 200, 1, 3, 2]`,
+  output: `4   (1, 2, 3, 4)`,
+  approach: `Load into a set. Only begin counting at a number n where n - 1 is not in the set (a sequence start); then extend while n + length is in the set. Each element is touched at most twice, so it is O(n) despite the inner while loop.`,
+  solution: `def longest_consecutive(nums):
+    num_set = set(nums)
+    best = 0
+    for n in num_set:
+        if n - 1 not in num_set:
+            length = 1
+            while n + length in num_set:
+                length += 1
+            best = max(best, length)
+    return best`,
+  deAngle: `Follow-up: this is the in-memory cousin of the gap-and-island pattern. The SQL/Spark version uses a window function: value minus row_number() gives a constant per island, then group by that constant.`
+},
+{
+  id: "subarray-sum-k", difficulty: "med", bonus: false,
+  title: "Subarray Sum Equals K",
+  link: "https://leetcode.com/problems/subarray-sum-equals-k/",
+  prompt: `Given an integer array (may contain <code>negatives</code>) and k, return the total number of contiguous subarrays whose sum equals k.`,
+  input: `nums = [1, 2, 3], k = 3`,
+  output: `2   ([1, 2] and [3])`,
+  approach: `Prefix sums. If running_sum - k was seen before, every earlier occurrence marks a subarray ending here with sum k. Keep a dict of prefix_sum to count, seeded with {0: 1}. O(n) time, O(n) space. Sliding window fails here because negatives break monotonicity.`,
+  solution: `def subarray_sum(nums, k):
+    prefix_count = {0: 1}
+    running = 0
+    total = 0
+    for x in nums:
+        running += x
+        total += prefix_count.get(running - k, 0)
+        prefix_count[running] = prefix_count.get(running, 0) + 1
+    return total`,
+  deAngle: `Follow-up: "why not sliding window?" Because with negatives, shrinking the window no longer reliably reduces the sum. Connect it to running totals with window functions: sum() over (order by ts rows unbounded preceding).`
+},
+{
+  id: "encode-decode-strings", difficulty: "med", bonus: false,
+  title: "Encode and Decode Strings",
+  link: "https://leetcode.com/problems/encode-and-decode-strings/",
+  prompt: `Design <code>encode</code> and <code>decode</code> so that a list of strings can be sent over a network as one string and restored exactly, even if the strings contain any character.`,
+  input: `["lint", "code", "love", "you"]`,
+  output: `encode: "4#lint4#code4#love3#you"  →  decode returns the original list`,
+  approach: `Length-prefix each string: len + "#" + string. When decoding, read up to the first "#" to get the length, then slice exactly that many characters. Safe even if the payload contains "#", because the length tells you where the string ends, never a delimiter search inside it.`,
+  solution: `def encode(strs):
+    return ''.join(f"{len(s)}#{s}" for s in strs)
+
+def decode(s):
+    res = []
+    i = 0
+    while i < len(s):
+        j = s.index('#', i)
+        length = int(s[i:j])
+        res.append(s[j + 1: j + 1 + length])
+        i = j + 1 + length
+    return res`,
+  deAngle: `Follow-up: this is the same idea behind length-prefixed framing in Kafka/protobuf/Avro and why naive CSV delimiters break on embedded commas or newlines. Good to say out loud.`
+},
+{
+  id: "longest-palindromic-substring", difficulty: "med", bonus: false,
+  title: "Longest Palindromic Substring",
+  link: "https://leetcode.com/problems/longest-palindromic-substring/",
+  prompt: `Given a string, return its <code>longest palindromic substring</code>.`,
+  input: `s = "babad"`,
+  output: `"bab"   ("aba" is also valid)`,
+  approach: `Expand around each center, trying both odd-length (i, i) and even-length (i, i+1) centers. Track the best (start, end). O(n^2) time, O(1) space. Mention Manacher's algorithm gives O(n) if pushed.`,
+  solution: `def longest_palindrome(s):
+    if not s:
+        return ""
+    start, end = 0, 0
+
+    def expand(l, r):
+        while l >= 0 and r < len(s) and s[l] == s[r]:
+            l -= 1
+            r += 1
+        return l + 1, r - 1
+
+    for i in range(len(s)):
+        for l, r in (expand(i, i), expand(i, i + 1)):
+            if r - l > end - start:
+                start, end = l, r
+    return s[start:end + 1]`,
+  deAngle: `Follow-up: interviewers use this to see if you can reason about edge cases (empty string, all same chars, even-length palindromes) and then name the O(n) Manacher option without being asked to implement it.`
+},
+{
+  id: "string-to-integer-atoi", difficulty: "med", bonus: false,
+  title: "String to Integer (atoi)",
+  link: "https://leetcode.com/problems/string-to-integer-atoi/",
+  prompt: `Implement <code>atoi</code>: skip leading whitespace, read an optional sign, read digits until a non-digit, and clamp to the signed 32-bit range.`,
+  input: `s = "   -42"   and   s = "4193 with words"`,
+  output: `-42   and   4193`,
+  approach: `A deterministic left-to-right parse: whitespace, sign, digits, clamp. No regex needed. This is a "careful engineering" question; the value is in handling every edge case cleanly (empty, only sign, overflow).`,
+  solution: `def my_atoi(s):
+    i, n = 0, len(s)
+    while i < n and s[i] == ' ':
+        i += 1
+    sign = 1
+    if i < n and s[i] in '+-':
+        sign = -1 if s[i] == '-' else 1
+        i += 1
+    result = 0
+    while i < n and s[i].isdigit():
+        result = result * 10 + int(s[i])
+        i += 1
+    result *= sign
+    INT_MAX, INT_MIN = 2 ** 31 - 1, -2 ** 31
+    return max(INT_MIN, min(INT_MAX, result))`,
+  deAngle: `Follow-up: this mirrors defensive parsing in ingestion pipelines: trim, validate, cast safely, and route bad rows to a dead-letter location instead of failing the job. Say how you would handle malformed values at scale.`
+},
+{
+  id: "word-break", difficulty: "med", bonus: false,
+  title: "Word Break",
+  link: "https://leetcode.com/problems/word-break/",
+  prompt: `Given a string <code>s</code> and a dictionary of words, return true if <code>s</code> can be segmented into a space-separated sequence of dictionary words.`,
+  input: `s = "leetcode", wordDict = ["leet", "code"]`,
+  output: `true`,
+  approach: `Put the words in a set for O(1) membership. dp[i] means s[:i] can be segmented. dp[i] is true if some j < i has dp[j] true and s[j:i] in the set. O(n^2) substring checks (times slice cost), O(n) space.`,
+  solution: `def word_break(s, word_dict):
+    words = set(word_dict)
+    dp = [False] * (len(s) + 1)
+    dp[0] = True
+    for i in range(1, len(s) + 1):
+        for j in range(i):
+            if dp[j] and s[j:i] in words:
+                dp[i] = True
+                break
+    return dp[len(s)]`,
+  deAngle: `Follow-up: optimize by capping j at the longest word length in the dictionary. For a very large dictionary, use a Trie so you stop early when no word has the current prefix.`
+},
+{
+  id: "lru-cache", difficulty: "med", bonus: false,
+  title: "LRU Cache",
+  link: "https://leetcode.com/problems/lru-cache/",
+  prompt: `Design a cache with fixed capacity supporting <code>get(key)</code> and <code>put(key, value)</code> in <code>O(1)</code>, evicting the least recently used key when full.`,
+  input: `LRUCache(2); put(1,1); put(2,2); get(1); put(3,3); get(2)`,
+  output: `get(1) = 1,  get(2) = -1   (key 2 was evicted when 3 was inserted)`,
+  approach: `A hash map plus an ordering structure. In Python, OrderedDict does both: move_to_end on every access, popitem(last=False) to evict the oldest. Be ready to explain the manual version: dict of key to node in a doubly linked list with sentinel head/tail.`,
+  solution: `from collections import OrderedDict
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.cache = OrderedDict()
+
+    def get(self, key):
+        if key not in self.cache:
+            return -1
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def put(self, key, value):
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        self.cache[key] = value
+        if len(self.cache) > self.cap:
+            self.cache.popitem(last=False)`,
+  deAngle: `Follow-up: "make it thread-safe / distributed." Talk about locks or sharding by key hash, TTL, and why a real system uses Redis/Memcached. Also relevant to caching lookup/dimension tables in a streaming enrichment job.`
+},
+{
+  id: "alien-dictionary", difficulty: "hard", bonus: false,
+  title: "Alien Dictionary",
+  link: "https://leetcode.com/problems/alien-dictionary/",
+  prompt: `Given words sorted in an alien language's lexicographic order, derive a valid <code>character order</code>. Return "" if the input is invalid (cycle or prefix conflict).`,
+  input: `words = ["wrt", "wrf", "er", "ett", "rftt"]`,
+  output: `"wertf"`,
+  approach: `Compare adjacent words; the first differing character pair gives an edge x → y. Build the graph with an adjacency dict and in-degree counts, then run Kahn's topological sort. Two traps: a longer word appearing before its own prefix is invalid, and a leftover cycle means no valid order.`,
+  solution: `from collections import deque
+
+def alien_order(words):
+    adj = {c: set() for w in words for c in w}
+    indeg = {c: 0 for c in adj}
+    for a, b in zip(words, words[1:]):
+        if len(a) > len(b) and a.startswith(b):
+            return ""
+        for x, y in zip(a, b):
+            if x != y:
+                if y not in adj[x]:
+                    adj[x].add(y)
+                    indeg[y] += 1
+                break
+    queue = deque(c for c in indeg if indeg[c] == 0)
+    order = []
+    while queue:
+        c = queue.popleft()
+        order.append(c)
+        for nxt in adj[c]:
+            indeg[nxt] -= 1
+            if indeg[nxt] == 0:
+                queue.append(nxt)
+    return ''.join(order) if len(order) == len(adj) else ""`,
+  deAngle: `Follow-up: this is dependency resolution, the same logic as ordering tasks in an Airflow/ADF DAG or detecting circular dependencies between tables. Connecting it to pipeline orchestration is a strong senior-level answer.`
+},
+{
+  id: "time-based-kv-store", difficulty: "med", bonus: true,
+  title: "Time Based Key-Value Store",
+  link: "https://leetcode.com/problems/time-based-key-value-store/",
+  prompt: `Design a store where <code>set(key, value, timestamp)</code> saves a versioned value and <code>get(key, timestamp)</code> returns the value with the largest timestamp less than or equal to the query time.`,
+  input: `set("foo","bar",1); get("foo",1); get("foo",3); set("foo","bar2",4); get("foo",5)`,
+  output: `"bar", "bar", "bar2"`,
+  approach: `Dict from key to a list of (timestamp, value), appended in increasing timestamp order. get uses binary search (bisect_right) to find the last entry at or before the query time. set is O(1), get is O(log n).`,
+  solution: `import bisect
+from collections import defaultdict
+
+class TimeMap:
+    def __init__(self):
+        self.store = defaultdict(list)
+
+    def set(self, key, value, timestamp):
+        self.store[key].append((timestamp, value))
+
+    def get(self, key, timestamp):
+        arr = self.store.get(key, [])
+        i = bisect.bisect_right(arr, (timestamp, chr(0x10FFFF)))
+        return arr[i - 1][1] if i else ""`,
+  deAngle: `Bonus, very DE-relevant: this is "as-of" lookup, the core of SCD Type 2 point-in-time joins and feature stores. Mention the Spark equivalent: join on key with start_ts less than or equal to event_ts and event_ts less than end_ts.`
+},
+{
+  id: "logger-rate-limiter", difficulty: "easy", bonus: true,
+  title: "Logger Rate Limiter",
+  link: "https://leetcode.com/problems/logger-rate-limiter/",
+  prompt: `Design a logger where each unique message may be printed at most once every <code>10 seconds</code>. <code>shouldPrintMessage(timestamp, message)</code> returns whether it may be printed now.`,
+  input: `(1,"foo") (2,"bar") (3,"foo") (8,"bar") (10,"foo") (11,"foo")`,
+  output: `true, true, false, false, false, true`,
+  approach: `Dict from message to the next timestamp at which it is allowed. If the current timestamp is before that, reject; otherwise accept and set next_allowed = timestamp + 10. O(1) per call; memory grows with distinct messages.`,
+  solution: `class Logger:
+    def __init__(self):
+        self.next_allowed = {}
+
+    def should_print(self, timestamp, message):
+        if timestamp < self.next_allowed.get(message, 0):
+            return False
+        self.next_allowed[message] = timestamp + 10
+        return True`,
+  deAngle: `Bonus: the follow-up is memory growth. Evict expired keys (periodic cleanup or a TTL cache) and discuss the distributed version, where a shared store like Redis with key expiry does the same job. Same idea as streaming dedup with a time-bounded state store.`
+},
+{
+  id: "find-duplicate-file", difficulty: "med", bonus: true,
+  title: "Find Duplicate File in System",
+  link: "https://leetcode.com/problems/find-duplicate-file-in-system/",
+  prompt: `Given directory-info strings like <code>"root/a 1.txt(abcd) 2.txt(efgh)"</code>, return groups of file paths that have <code>identical content</code>.`,
+  input: `["root/a 1.txt(abcd) 2.txt(efgh)", "root/c 3.txt(abcd)", "root/c/d 4.txt(efgh)", "root 4.txt(efgh)"]`,
+  output: `[["root/a/1.txt","root/c/3.txt"], ["root/a/2.txt","root/c/d/4.txt","root/4.txt"]]`,
+  approach: `Parse each entry: first token is the directory, the rest are name(content). Map content to the list of full paths, then return groups with more than one path. O(total characters).`,
+  solution: `from collections import defaultdict
+
+def find_duplicate(paths):
+    content_map = defaultdict(list)
+    for entry in paths:
+        parts = entry.split(' ')
+        directory = parts[0]
+        for f in parts[1:]:
+            name, content = f.split('(')
+            content_map[content[:-1]].append(directory + '/' + name)
+    return [g for g in content_map.values() if len(g) > 1]`,
+  deAngle: `Bonus, classic DE follow-ups: files are huge, so do not key on full content. Group by size first, then a partial hash, then a full hash only for collisions. At scale, this is a group-by on (size, hash) in Spark. Also discuss hash collisions and verifying with a byte compare.`
+}
+];
+
+// ---- tiny Python syntax highlighter (plain code in, markup out) ----
+function highlight(code){
+  const esc = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const re = /(#.*$)|("(?:[^"]|\\.)*"|'(?:[^']|\\.)*')|\b(def|class|return|for|in|if|elif|else|while|not|and|or|import|from|continue|break|None|True|False|is|lambda)\b|\b(\d+)\b/gm;
+  return esc.replace(re, (m, com, str, kw, num) => {
+    if (com) return '<span class="com">' + m + '</span>';
+    if (str) return '<span class="str">' + m + '</span>';
+    if (kw)  return '<span class="kw">' + m + '</span>';
+    if (num) return '<span class="num">' + m + '</span>';
+    return m;
+  });
+}
+
+const indexGrid = document.getElementById('indexGrid');
+const stack = document.getElementById('stack');
+
+problems.forEach((p, i) => {
+  const num = String(i + 1).padStart(2, '0');
+  const diffLabel = p.difficulty === 'easy' ? 'Easy' : p.difficulty === 'med' ? 'Medium' : 'Hard';
+
+  const idxEl = document.createElement('a');
+  idxEl.href = '#' + p.id;
+  idxEl.className = 'index-item' + (p.bonus ? ' bonus' : '');
+  idxEl.innerHTML = '<span class="n">' + num + '</span> ' + p.title + (p.bonus ? ' ✦' : '');
+  indexGrid.appendChild(idxEl);
+
+  const card = document.createElement('div');
+  card.className = 'card' + (p.bonus ? ' bonus' : '');
+  card.id = p.id;
+  card.innerHTML = `
+    <div class="card-head">
+      <div class="card-head-top">
+        <span class="qnum ${p.bonus ? 'bonus' : ''}">Q${num}</span>
+        <span class="difficulty ${p.difficulty}">${diffLabel}</span>
+        ${p.bonus ? '<span class="bonus-tag">Bonus · DE-flavoured</span>' : ''}
+        <a class="card-link" href="${p.link}" target="_blank" rel="noopener">${p.link}</a>
+      </div>
+      <h3 class="card-title" contenteditable="true">${p.title}</h3>
+      <p class="card-prompt" contenteditable="true">${p.prompt}</p>
+    </div>
+    <div class="card-body">
+      <div class="section-label">Sample Input / Output</div>
+      <div class="io-pair">
+        <div class="io-block"><h4>Input</h4><div class="val" contenteditable="true"></div></div>
+        <div class="io-block"><h4>Output</h4><div class="val" contenteditable="true"></div></div>
+      </div>
+      <details class="solution">
+        <summary><span class="prompt-txt">#</span> <span class="exec">Reveal approach &amp; solution</span> <span class="prompt-txt">(try it yourself first)</span></summary>
+        <div class="solution-inner">
+          <p class="approach" contenteditable="true"><b>Approach:</b> ${p.approach}</p>
+          <pre><code contenteditable="true">${highlight(p.solution)}</code></pre>
+          <div class="de-angle" contenteditable="true"><b>DE interview angle:</b> ${p.deAngle}</div>
+        </div>
+      </details>
+    </div>`;
+  const vals = card.querySelectorAll('.io-block .val');
+  vals[0].textContent = p.input;   // textContent keeps quotes/brackets literal
+  vals[1].textContent = p.output;
+  stack.appendChild(card);
+});
+
+// --- Edit mode toggle ---
+const editBtn = document.getElementById('editToggle');
+let editing = false;
+editBtn.addEventListener('click', () => {
+  editing = !editing;
+  document.designMode = editing ? 'on' : 'off';
+  editBtn.textContent = editing ? '✅ Edit mode: on' : '✏️ Edit mode: off';
+  editBtn.classList.toggle('on', editing);
+});
+
+// --- Download edited copy ---
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  if (editing) { document.designMode = 'off'; editBtn.textContent = '✏️ Edit mode: off'; editBtn.classList.remove('on'); editing = false; }
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'strings_dictionary_prep_edited.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
